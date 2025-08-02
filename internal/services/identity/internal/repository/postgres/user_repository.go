@@ -1,17 +1,17 @@
 package postgres
 
 import (
+	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/identity/internal/entity"
 	"gorm.io/gorm"
-	"log"
 )
 
 type userRepository struct {
-	Logger *log.Logger
+	Logger logger.Logger
 	DB     *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB, logger *log.Logger) *userRepository {
+func NewUserRepository(logger logger.Logger, db *gorm.DB) *userRepository {
 	return &userRepository{
 		Logger: logger,
 		DB:     db,
@@ -19,24 +19,77 @@ func NewUserRepository(db *gorm.DB, logger *log.Logger) *userRepository {
 }
 
 func (u *userRepository) GetUserByID(id int64) (*entity.User, error) {
-	var user entity.User
+	u.Logger.Info("Fetching user with ID: %d", id)
 
-	log.Logger{}
+	var user entity.User
 	if err := u.DB.First(&user, id).Error; err != nil {
+		u.Logger.Error("Error fetching user with ID %d: %v", id, err)
+		return nil, err
 	}
+
+	u.Logger.Info("Successfully fetched user with ID: %d", id)
+	return &user, nil
 }
 
 func (u *userRepository) GetUsers() (*[]entity.User, error) {
-	//TODO implement me
-	panic("implement me")
+	// TODO Pagination and filtering can be added later
+
+	u.Logger.Info("Fetching all users")
+
+	var users []entity.User
+	if err := u.DB.Find(&users).Error; err != nil {
+		u.Logger.Error("Error fetching users: %v", err)
+		return nil, err
+	}
+
+	u.Logger.Info("Get users successfully")
+	return &users, nil
 }
 
-func (u *userRepository) CreateUser(user *entity.User) (*entity.User, error) {
-	//TODO implement me
-	panic("implement me")
+func (u *userRepository) CreateUser(user *entity.User) error {
+	u.Logger.Info("Creating data with email: %s", user.Email)
+
+	if err := u.DB.Create(&user).Error; err != nil {
+		u.Logger.Error("Error creating data with email %s: %v", user.Email, err)
+		return err
+	}
+
+	u.Logger.Info("User created successfully with ID: %d", user.ID)
+	return nil
+}
+
+func (u *userRepository) UpdateUser(user *entity.User) error {
+	u.Logger.Info("Updating user profile with ID: %d", user.ID)
+
+	err := u.DB.Save(user).Error
+	if err != nil {
+		u.Logger.Error("Error updating user with ID %d: %v", user.ID, err)
+	}
+
+	u.Logger.Info("User with ID %d updated successfully", user.ID)
+	return nil
+}
+
+func (u *userRepository) UpdateUserPassword(user *entity.User) error {
+	u.Logger.Info("Updating password for user with ID: %d", user.ID)
+
+	if err := u.DB.Save(user).Error; err != nil {
+		u.Logger.Error("Error updating password for user with ID %d: %v", user.ID, err)
+		return err
+	}
+
+	u.Logger.Info("Password for user with ID %d updated successfully", user.ID)
+	return nil
 }
 
 func (u *userRepository) DeleteUser(id int64) error {
-	//TODO implement me
-	panic("implement me")
+	u.Logger.Info("Deleting user with ID: %d", id)
+
+	if err := u.DB.Where("id = ?", id).Delete(&entity.User{}).Error; err != nil {
+		u.Logger.Error("Error deleting user with ID %d: %v", id, err)
+		return err
+	}
+
+	u.Logger.Info("User with ID %d deleted successfully", id)
+	return nil
 }

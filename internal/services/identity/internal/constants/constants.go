@@ -1,18 +1,18 @@
 package constants
 
 type Gender string
-type Status string
+type UserStatus string
 
 const (
-	MALE   string = "MALE"
-	FEMALE string = "FEMALE"
-	OTHER  string = "OTHER"
+	MALE   Gender = "MALE"
+	FEMALE Gender = "FEMALE"
+	OTHER  Gender = "OTHER"
 )
 
 const (
-	ACTIVE   string = "ACTIVE"
-	INACTIVE string = "INACTIVE"
-	DELETED  string = "DELETED"
+	ACTIVE   UserStatus = "ACTIVE"
+	INACTIVE UserStatus = "INACTIVE"
+	DELETED  UserStatus = "DELETED"
 )
 
 func GetGender(s string) string {

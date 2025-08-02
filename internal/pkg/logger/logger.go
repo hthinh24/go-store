@@ -13,17 +13,11 @@ type Logger interface {
 
 type appLogger struct {
 	level  string
-	logger *zap.Logger
+	logger *zap.SugaredLogger
 }
 
 func NewAppLogger(level string) Logger {
-	var logger *zap.Logger
-	switch level {
-	case "production":
-		logger, _ = zap.NewProduction()
-	default:
-		logger, _ = zap.NewDevelopment()
-	}
+	logger := getLogger(level)
 
 	return &appLogger{
 		level:  level,
@@ -32,14 +26,42 @@ func NewAppLogger(level string) Logger {
 }
 
 func (a *appLogger) Info(args ...interface{}) {
-	a.logger.Sugar().Info(args...)
+	a.logger.Info(args...)
 }
 func (a *appLogger) Error(args ...interface{}) {
-	a.logger.Sugar().Error(args...)
+	a.logger.Error(args...)
 }
 func (a *appLogger) Debug(args ...interface{}) {
-	a.logger.Sugar().Debug(args...)
+	a.logger.Debug(args...)
 }
 func (a *appLogger) Warn(args ...interface{}) {
-	a.logger.Sugar().Warn(args...)
+	a.logger.Warn(args...)
+}
+func WithComponent(level string, component string) Logger {
+	if component == "" {
+		return NewAppLogger(level)
+	}
+
+	logger := getLogger(level)
+
+	return &appLogger{
+		level:  level,
+		logger: logger.Named(component),
+	}
+}
+
+func getLogger(level string) *zap.SugaredLogger {
+	var logger *zap.Logger
+	var sugarLogger *zap.SugaredLogger
+
+	switch level {
+	case "production":
+		logger, _ = zap.NewProduction()
+		sugarLogger = logger.Sugar()
+	default:
+		logger, _ = zap.NewDevelopment()
+		sugarLogger = logger.Sugar()
+	}
+
+	return sugarLogger
 }

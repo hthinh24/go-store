@@ -1,13 +1,15 @@
 package entity
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
-	ID           int64     `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
+	BaseEntity
 	Email        string    `json:"email" gorm:"column:email;unique;not null"`
 	Password     string    `json:"password" gorm:"column:password"`
-	ProviderID   string    `json:"provider_id" gorm:"column:providerID;not null"`
-	ProviderName string    `json:"provider_name" gorm:"column:providerName;not null"`
+	ProviderID   string    `json:"provider_id" gorm:"column:provider_id;not null"`
+	ProviderName string    `json:"provider_name" gorm:"column:provider_name;not null"`
 	LastName     string    `json:"last_name" gorm:"column:last_name;not null"`
 	FirstName    string    `json:"first_name" gorm:"column:first_name;not null"`
 	Avatar       string    `json:"avatar" gorm:"column:avatar"`
@@ -18,9 +20,9 @@ type User struct {
 }
 
 type UserHasRole struct {
-	ID     int64 `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserID int64 `gorm:"column:users_id;not null" json:"users_id"`
-	RoleID int64 `gorm:"column:roles_id;not null" json:"roles_id"`
+	ID     int64 `json:"id" gorm:"primaryKey;autoIncrement"`
+	UserID int64 `json:"users_id" gorm:"column:users_id;not null"`
+	RoleID int64 `json:"roles_id" gorm:"column:roles_id;not null"`
 }
 
 func (u User) TableName() string {

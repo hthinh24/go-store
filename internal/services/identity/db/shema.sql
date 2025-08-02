@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS users
     id            BIGSERIAL    NOT NULL,
     email         varchar(255) NOT NULL UNIQUE,
     password      varchar(255),
-    providerID    varchar(255) NOT NULL,
-    providerName  varchar(255) NOT NULL,
+    provider_id    varchar(255) NOT NULL DEFAULT 1,
+    provider_name  varchar(255) NOT NULL DEFAULT 'APP',
     last_name     varchar(255) NOT NULL,
     first_name    varchar(255) NOT NULL,
     avatar        varchar(255),
@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS users
     phone_number  varchar(20)  NOT NULL,
     date_of_birth timestamp    NOT NULL,
     status        varchar(255) NOT NULL,
+    created_by    varchar(255) NOT NULL,
+    updated_by    varchar(255) NOT NULL,
+    created_at    timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version       int          NOT NULL DEFAULT 1,
     PRIMARY KEY (id)
 );
 
@@ -20,6 +25,8 @@ CREATE TABLE IF NOT EXISTS roles
     id          BIGSERIAL    NOT NULL,
     name        varchar(255) NOT NULL,
     description varchar(255) NOT NULL,
+    created_by  varchar(255) NOT NULL,
+    updated_by  varchar(255) NOT NULL,
     PRIMARY KEY (id)
 );
 
