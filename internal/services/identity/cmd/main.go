@@ -9,7 +9,8 @@ import (
 
 func main() {
 
-	_ = logger.NewAppLogger("identity-service")
+	log := logger.NewAppLogger("dev")
+	log.Info("Starting Identity Service")
 
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
