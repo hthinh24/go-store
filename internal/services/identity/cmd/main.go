@@ -32,6 +32,8 @@ func main() {
 	users.GET("/:id", userController.GetUserByID())
 	users.GET("", userController.GetUsers())
 	users.POST("", userController.CreateUser())
+	users.PUT("/:id/profile", userController.UpdateUserProfile())
+	users.PATCH("/:id/password", userController.UpdateUserPassword())
 	users.DELETE("/:id", userController.DeleteUser())
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")

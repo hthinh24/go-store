@@ -72,7 +72,7 @@ func (u *userService) CreateUser(data *request.CreateUserRequest) (*response.Use
 	return createUserResponse(user), nil
 }
 
-func (u *userService) UpdateUser(id int64, data *request.UpdateUserProfileRequest) (*response.UserResponse, error) {
+func (u *userService) UpdateUserProfile(id int64, data *request.UpdateUserProfileRequest) (*response.UserResponse, error) {
 	user, err := u.repository.GetUserByID(id)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (u *userService) UpdateUser(id int64, data *request.UpdateUserProfileReques
 	u.logger.Info("Updating user profile with ID:", id)
 
 	updateUserProfile(user, data)
-	if err := u.repository.UpdateUser(id, user); err != nil {
+	if err := u.repository.UpdateUserProfile(user); err != nil {
 		u.logger.Error("Error updating user profile:", err)
 		return nil, err
 	}
@@ -110,11 +110,10 @@ func (u *userService) UpdateUserPassword(id int64, data *request.UpdateUserPassw
 	}
 
 	user.Password = string(hashedPassword)
-	if err := u.repository.UpdateUser(id, user); err != nil {
+	if err := u.repository.UpdateUserPassword(user); err != nil {
 		u.logger.Error("Error updating user password:", err)
 		return nil, err
 	}
-
 	u.logger.Info("Successfully updated user password for ID:", id)
 	return createUserResponse(user), nil
 }

@@ -58,7 +58,7 @@ func (u *userRepository) CreateUser(user *entity.User) error {
 	return nil
 }
 
-func (u *userRepository) UpdateUser(user *entity.User) error {
+func (u *userRepository) UpdateUserProfile(user *entity.User) error {
 	u.Logger.Info("Updating user profile with ID: %d", user.ID)
 
 	err := u.DB.Save(user).Error
