@@ -5,8 +5,9 @@ import (
 )
 
 type UserRepository interface {
-	GetUserByID(id int64) (*entity.User, error)
-	GetUsers() (*[]entity.User, error)
+	FindUserByID(id int64) (*entity.User, error)
+	FindUserByEmail(email string) (*entity.User, error)
+	FindUsers() (*[]entity.User, error)
 	CreateUser(user *entity.User) error
 	UpdateUserProfile(user *entity.User) error
 	UpdateUserPassword(user *entity.User) error

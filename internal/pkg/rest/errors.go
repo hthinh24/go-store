@@ -1,46 +1,7 @@
 package rest
 
-type ApiError struct {
-	Code       int
-	CodeStatus string
+type AuthenticationError struct{}
+
+func (e AuthenticationError) Error() string {
+	return "Wrong email or password"
 }
-
-func NewApiError(code int, codeStatus string) ApiError {
-	return ApiError{
-		Code:       code,
-		CodeStatus: codeStatus,
-	}
-}
-
-var (
-	BadRequestError          = ApiError{BadRequestCode, BadRequestStatus}
-	InternalServerErrorError = ApiError{InternalServerErrorCode, InternalServerErrorStatus}
-	NotFoundError            = ApiError{NotFoundCode, NotFoundStatus}
-
-	UnauthorizedError = ApiError{UnauthorizedCode, UnauthorizedStatus}
-	ForbiddenError    = ApiError{ForbiddenCode, ForbiddenStatus}
-
-	ValidationError = ApiError{ValidationErrorCode, ValidationErrorStatus}
-)
-
-const (
-	BadRequestCode          = 400
-	InternalServerErrorCode = 500
-	NotFoundCode            = 404
-
-	UnauthorizedCode = 401
-	ForbiddenCode    = 403
-
-	ValidationErrorCode = 600
-)
-
-const (
-	BadRequestStatus          = "Bad Request"
-	InternalServerErrorStatus = "Internal Server Error"
-	NotFoundStatus            = "Not Found"
-
-	UnauthorizedStatus = "Unauthorized"
-	ForbiddenStatus    = "Forbidden"
-
-	ValidationErrorStatus = "Validation Failed"
-)

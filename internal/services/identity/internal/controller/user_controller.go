@@ -1,28 +1,30 @@
 package controller
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/internal/pkg/rest"
 	"github.com/hthinh24/go-store/services/identity"
 	"github.com/hthinh24/go-store/services/identity/internal/dto/request"
+	customErr "github.com/hthinh24/go-store/services/identity/internal/errors"
 	"net/http"
 	"strconv"
 )
 
-type userController struct {
-	logger  logger.Logger
-	service identity.UserService
+type UserController struct {
+	logger      logger.Logger
+	userService identity.UserService
 }
 
-func NewUserController(logger logger.Logger, service identity.UserService) *userController {
-	return &userController{
-		logger:  logger,
-		service: service,
+func NewUserController(logger logger.Logger, service identity.UserService) *UserController {
+	return &UserController{
+		logger:      logger,
+		userService: service,
 	}
 }
 
-func (u *userController) GetUserByID() func(ctx *gin.Context) {
+func (u *UserController) GetUserByID() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		idStr := ctx.Param("id")
 
@@ -35,8 +37,14 @@ func (u *userController) GetUserByID() func(ctx *gin.Context) {
 
 		u.logger.Info("Fetching user by ID:", id)
 
-		user, err := u.service.GetUserByID(int64(id))
+		user, err := u.userService.GetUserByID(int64(id))
 		if err != nil {
+			if errors.Is(err, customErr.ErrUserNotFound{}) {
+				u.logger.Error("User with ID:", id, "not found")
+				ctx.JSON(http.StatusNotFound, rest.ErrorResponse{ApiError: rest.NotFoundError, Message: "User not found"})
+				return
+			}
+
 			u.logger.Error("Error fetching user by ID:", err)
 			ctx.JSON(http.StatusInternalServerError, rest.ErrorResponse{ApiError: rest.InternalServerErrorError, Message: "Failed to fetch user"})
 			return
@@ -47,11 +55,11 @@ func (u *userController) GetUserByID() func(ctx *gin.Context) {
 	}
 }
 
-func (u *userController) GetUsers() func(ctx *gin.Context) {
+func (u *UserController) GetUsers() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		u.logger.Info("Get all users")
 
-		users, err := u.service.GetUsers()
+		users, err := u.userService.GetUsers()
 		if err != nil {
 			u.logger.Error("Error fetching users:", err)
 			ctx.JSON(http.StatusInternalServerError, rest.ErrorResponse{ApiError: rest.InternalServerErrorError, Message: "Failed to fetch users"})
@@ -63,7 +71,7 @@ func (u *userController) GetUsers() func(ctx *gin.Context) {
 	}
 }
 
-func (u *userController) CreateUser() func(ctx *gin.Context) {
+func (u *UserController) CreateUser() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		var userRequest request.CreateUserRequest
 		if err := ctx.ShouldBindJSON(&userRequest); err != nil {
@@ -80,7 +88,7 @@ func (u *userController) CreateUser() func(ctx *gin.Context) {
 
 		u.logger.Info("Creating new user with email:", userRequest.Email)
 
-		user, err := u.service.CreateUser(&userRequest)
+		user, err := u.userService.CreateUser(&userRequest)
 		if err != nil {
 			u.logger.Error("Error creating user:")
 			ctx.JSON(http.StatusInternalServerError, rest.ErrorResponse{ApiError: rest.InternalServerErrorError, Message: "Failed to create user"})
@@ -92,7 +100,7 @@ func (u *userController) CreateUser() func(ctx *gin.Context) {
 	}
 }
 
-func (u *userController) UpdateUserProfile() func(ctx *gin.Context) {
+func (u *UserController) UpdateUserProfile() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		idStr := ctx.Param("id")
 
@@ -119,7 +127,7 @@ func (u *userController) UpdateUserProfile() func(ctx *gin.Context) {
 
 		u.logger.Info("Updating user profile with ID:", id)
 
-		user, err := u.service.UpdateUserProfile(int64(id), &updateRequest)
+		user, err := u.userService.UpdateUserProfile(int64(id), &updateRequest)
 		if err != nil {
 			u.logger.Error("Error updating user profile:", err)
 			ctx.JSON(http.StatusInternalServerError, rest.ErrorResponse{ApiError: rest.InternalServerErrorError, Message: "Failed to update user profile"})
@@ -131,7 +139,7 @@ func (u *userController) UpdateUserProfile() func(ctx *gin.Context) {
 	}
 }
 
-func (u *userController) UpdateUserPassword() func(ctx *gin.Context) {
+func (u *UserController) UpdateUserPassword() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		idStr := ctx.Param("id")
 
@@ -157,7 +165,7 @@ func (u *userController) UpdateUserPassword() func(ctx *gin.Context) {
 
 		u.logger.Info("Updating user password for ID:", id)
 
-		user, err := u.service.UpdateUserPassword(int64(id), &passwordRequest)
+		user, err := u.userService.UpdateUserPassword(int64(id), &passwordRequest)
 		if err != nil {
 			u.logger.Error("Error updating user password:", err)
 			ctx.JSON(http.StatusInternalServerError, rest.ErrorResponse{ApiError: rest.InternalServerErrorError, Message: "Failed to update user password"})
@@ -169,7 +177,7 @@ func (u *userController) UpdateUserPassword() func(ctx *gin.Context) {
 	}
 }
 
-func (u *userController) DeleteUser() func(ctx *gin.Context) {
+func (u *UserController) DeleteUser() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		idStr := ctx.Param("id")
 
@@ -182,7 +190,7 @@ func (u *userController) DeleteUser() func(ctx *gin.Context) {
 
 		u.logger.Info("Deleting user with ID:", id)
 
-		if err := u.service.DeleteUser(int64(id)); err != nil {
+		if err := u.userService.DeleteUser(int64(id)); err != nil {
 			u.logger.Error("Error deleting user with ID:", id, "Error:", err)
 			ctx.JSON(http.StatusInternalServerError, rest.ErrorResponse{ApiError: rest.InternalServerErrorError, Message: "Failed to delete user"})
 			return

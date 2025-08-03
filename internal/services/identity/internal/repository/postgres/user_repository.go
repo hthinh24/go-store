@@ -3,6 +3,7 @@ package postgres
 import (
 	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/identity/internal/entity"
+	"github.com/hthinh24/go-store/services/identity/internal/errors"
 	"gorm.io/gorm"
 )
 
@@ -18,20 +19,33 @@ func NewUserRepository(logger logger.Logger, db *gorm.DB) *userRepository {
 	}
 }
 
-func (u *userRepository) GetUserByID(id int64) (*entity.User, error) {
+func (u *userRepository) FindUserByID(id int64) (*entity.User, error) {
 	u.Logger.Info("Fetching user with ID: %d", id)
 
 	var user entity.User
 	if err := u.DB.First(&user, id).Error; err != nil {
-		u.Logger.Error("Error fetching user with ID %d: %v", id, err)
-		return nil, err
+		u.Logger.Error("User with id: %d: not found", id, err)
+		return nil, errors.ErrUserNotFound{}
 	}
 
 	u.Logger.Info("Successfully fetched user with ID: %d", id)
 	return &user, nil
 }
 
-func (u *userRepository) GetUsers() (*[]entity.User, error) {
+func (u *userRepository) FindUserByEmail(email string) (*entity.User, error) {
+	u.Logger.Info("Fetching user with email: %s", email)
+
+	var user entity.User
+	if err := u.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		u.Logger.Error("Error fetching user with email %s: %v", email, err)
+		return nil, errors.ErrUserNotFound{}
+	}
+
+	u.Logger.Info("Successfully fetched user with email: %s", email)
+	return &user, nil
+}
+
+func (u *userRepository) FindUsers() (*[]entity.User, error) {
 	// TODO Pagination and filtering can be added later
 
 	u.Logger.Info("Fetching all users")
@@ -50,7 +64,7 @@ func (u *userRepository) CreateUser(user *entity.User) error {
 	u.Logger.Info("Creating data with email: %s", user.Email)
 
 	if err := u.DB.Create(&user).Error; err != nil {
-		u.Logger.Error("Error creating data with email %s: %v", user.Email, err)
+		u.Logger.Error("Error creating data with email: ", user.Email, "error: ", err)
 		return err
 	}
 

@@ -3,6 +3,7 @@ package service
 import (
 	log "github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/identity"
+	"github.com/hthinh24/go-store/services/identity/internal/constants"
 	"github.com/hthinh24/go-store/services/identity/internal/dto/request"
 	"github.com/hthinh24/go-store/services/identity/internal/dto/response"
 	"github.com/hthinh24/go-store/services/identity/internal/entity"
@@ -10,21 +11,25 @@ import (
 )
 
 type userService struct {
-	logger     log.Logger
-	repository identity.UserRepository
+	logger         log.Logger
+	userRepository identity.UserRepository
+	authRepository identity.AuthRepository
 }
 
-func NewUserService(logger log.Logger, repository identity.UserRepository) *userService {
+func NewUserService(logger log.Logger,
+	userRepository identity.UserRepository,
+	authRepository identity.AuthRepository) identity.UserService {
 	return &userService{
-		logger:     logger,
-		repository: repository,
+		logger:         logger,
+		userRepository: userRepository,
+		authRepository: authRepository,
 	}
 }
 
 func (u *userService) GetUserByID(id int64) (*response.UserResponse, error) {
 	u.logger.Info("Get user by ID:", id)
 
-	user, err := u.repository.GetUserByID(id)
+	user, err := u.userRepository.FindUserByID(id)
 	if err != nil {
 		u.logger.Error("Error fetching user by ID:", err)
 		return nil, err
@@ -37,7 +42,7 @@ func (u *userService) GetUserByID(id int64) (*response.UserResponse, error) {
 func (u *userService) GetUsers() (*[]response.UserResponse, error) {
 	u.logger.Info("Get all users")
 
-	users, err := u.repository.GetUsers()
+	users, err := u.userRepository.FindUsers()
 	if err != nil {
 		u.logger.Error("Error fetching users:", err)
 		return nil, err
@@ -62,9 +67,13 @@ func (u *userService) CreateUser(data *request.CreateUserRequest) (*response.Use
 
 	data.Password = string(hashedPassword)
 	user := u.createUserEntity(data)
-
-	if err := u.repository.CreateUser(user); err != nil {
+	if err := u.userRepository.CreateUser(user); err != nil {
 		u.logger.Error("Error creating user:", err)
+		return nil, err
+	}
+
+	if err := u.setUserRoleToUser(user); err != nil {
+		u.logger.Error("Error setting user role:", err)
 		return nil, err
 	}
 
@@ -73,15 +82,15 @@ func (u *userService) CreateUser(data *request.CreateUserRequest) (*response.Use
 }
 
 func (u *userService) UpdateUserProfile(id int64, data *request.UpdateUserProfileRequest) (*response.UserResponse, error) {
-	user, err := u.repository.GetUserByID(id)
+	user, err := u.userRepository.FindUserByID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	u.logger.Info("Updating user profile with ID:", id)
 
-	updateUserProfile(user, data)
-	if err := u.repository.UpdateUserProfile(user); err != nil {
+	updateUserEntity(user, data)
+	if err := u.userRepository.UpdateUserProfile(user); err != nil {
 		u.logger.Error("Error updating user profile:", err)
 		return nil, err
 	}
@@ -91,7 +100,9 @@ func (u *userService) UpdateUserProfile(id int64, data *request.UpdateUserProfil
 }
 
 func (u *userService) UpdateUserPassword(id int64, data *request.UpdateUserPasswordRequest) (*response.UserResponse, error) {
-	user, err := u.repository.GetUserByID(id)
+	u.logger.Info("Find user by ID:", id)
+
+	user, err := u.userRepository.FindUserByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +121,7 @@ func (u *userService) UpdateUserPassword(id int64, data *request.UpdateUserPassw
 	}
 
 	user.Password = string(hashedPassword)
-	if err := u.repository.UpdateUserPassword(user); err != nil {
+	if err := u.userRepository.UpdateUserPassword(user); err != nil {
 		u.logger.Error("Error updating user password:", err)
 		return nil, err
 	}
@@ -121,7 +132,7 @@ func (u *userService) UpdateUserPassword(id int64, data *request.UpdateUserPassw
 func (u *userService) DeleteUser(id int64) error {
 	u.logger.Info("Deleting user with ID:", id)
 
-	err := u.repository.DeleteUser(id)
+	err := u.userRepository.DeleteUser(id)
 	if err != nil {
 		u.logger.Error("Error deleting user with ID:", id, "Error:", err)
 		return err
@@ -161,7 +172,7 @@ func createUserResponse(user *entity.User) *response.UserResponse {
 	}
 }
 
-func updateUserProfile(user *entity.User, data *request.UpdateUserProfileRequest) {
+func updateUserEntity(user *entity.User, data *request.UpdateUserProfileRequest) {
 	if data.Email != nil {
 		user.Email = *data.Email
 	}
@@ -183,4 +194,24 @@ func updateUserProfile(user *entity.User, data *request.UpdateUserProfileRequest
 	if data.DateOfBirth != nil {
 		user.DateOfBirth = *data.DateOfBirth
 	}
+}
+
+func (u *userService) setUserRoleToUser(user *entity.User) error {
+	role, err := u.authRepository.FindRoleByName(string(constants.ROLE_USER))
+	if err != nil {
+		return err
+	}
+
+	userHasRole := entity.UserRoles{
+		UserID: user.ID,
+		RoleID: role.ID,
+	}
+
+	if err := u.authRepository.AddRoleToUser(userHasRole); err != nil {
+		u.logger.Error("Error assigning role to user:", err)
+		return err
+	}
+
+	u.logger.Info("Successfully assigned role to user with ID:", user.ID)
+	return nil
 }

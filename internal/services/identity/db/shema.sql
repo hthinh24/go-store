@@ -25,8 +25,6 @@ CREATE TABLE IF NOT EXISTS roles
     id          BIGSERIAL    NOT NULL,
     name        varchar(255) NOT NULL,
     description varchar(255) NOT NULL,
-    created_by  varchar(255) NOT NULL,
-    updated_by  varchar(255) NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -38,27 +36,27 @@ CREATE TABLE IF NOT EXISTS permissions
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS user_has_role
+CREATE TABLE IF NOT EXISTS user_roles
 (
     ID       BIGSERIAL NOT NULL,
-    users_id int8      NOT NULL,
-    roles_id int8      NOT NULL,
+    user_id int8      NOT NULL,
+    role_id int8      NOT NULL,
     PRIMARY KEY (ID)
 );
 
-CREATE TABLE IF NOT EXISTS role_has_permission
+CREATE TABLE IF NOT EXISTS role_permissions
 (
     ID             BIGSERIAL NOT NULL,
-    permissions_id int8      NOT NULL,
-    roles_id       int8      NOT NULL,
+    permission_id int8      NOT NULL,
+    role_id       int8      NOT NULL,
     PRIMARY KEY (ID)
 );
 
-ALTER TABLE user_has_role
-    ADD CONSTRAINT FKuser_has_r352169 FOREIGN KEY (users_id) REFERENCES users (id);
-ALTER TABLE user_has_role
-    ADD CONSTRAINT FKuser_has_r355910 FOREIGN KEY (roles_id) REFERENCES roles (id);
-ALTER TABLE role_has_permission
-    ADD CONSTRAINT FKrole_has_p648170 FOREIGN KEY (permissions_id) REFERENCES permissions (id);
-ALTER TABLE role_has_permission
-    ADD CONSTRAINT FKrole_has_p131704 FOREIGN KEY (roles_id) REFERENCES roles (id);
+ALTER TABLE user_roles
+    ADD CONSTRAINT FKuser_has_r352169 FOREIGN KEY (user_id) REFERENCES users (id);
+ALTER TABLE user_roles
+    ADD CONSTRAINT FKuser_has_r355910 FOREIGN KEY (role_id) REFERENCES roles (id);
+ALTER TABLE role_permissions
+    ADD CONSTRAINT FKrole_has_p648170 FOREIGN KEY (permission_id) REFERENCES permissions (id);
+ALTER TABLE role_permissions
+    ADD CONSTRAINT FKrole_has_p131704 FOREIGN KEY (role_id) REFERENCES roles (id);

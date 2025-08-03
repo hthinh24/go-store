@@ -19,10 +19,10 @@ type User struct {
 	Status       string    `json:"status" gorm:"column:status;not null"`
 }
 
-type UserHasRole struct {
+type UserRoles struct {
 	ID     int64 `json:"id" gorm:"primaryKey;autoIncrement"`
-	UserID int64 `json:"users_id" gorm:"column:users_id;not null"`
-	RoleID int64 `json:"roles_id" gorm:"column:roles_id;not null"`
+	UserID int64 `json:"user_id" gorm:"column:user_id;not null"`
+	RoleID int64 `json:"role_id" gorm:"column:role_id;not null"`
 }
 
 func (u User) TableName() string {
