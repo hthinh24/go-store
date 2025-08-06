@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/product"
+	"github.com/hthinh24/go-store/services/product/internal/constants"
 	"github.com/hthinh24/go-store/services/product/internal/dto/repository"
 	"github.com/hthinh24/go-store/services/product/internal/dto/request"
 	"github.com/hthinh24/go-store/services/product/internal/dto/response"
@@ -308,6 +309,7 @@ func (p *productService) createProductSKUEntity(productID int64, productName str
 		SKU:          data.SKU,
 		SKUSignature: p.generateSKUSignature(productName, data.SKU),
 		Price:        data.Price,
+		Status:       string(constants.PRODUCT_STATUS_ACTIVE),
 		ProductID:    productID,
 	}
 }
@@ -450,4 +452,151 @@ func (p *productService) generateSKUSignature(name string, sku string) string {
 	skuSignature = strings.ReplaceAll(sku, " ", "-")
 
 	return skuSignature
+}
+
+// CreateProductWithoutSKU Help to create a product without SKU (for case app only have backend API)
+func (p *productService) CreateProductWithoutSKU(data *request.CreateProductWithoutSKURequest) (*response.ProductDetailResponse, error) {
+	p.logger.Info("Creating product without SKU with name: ", data.Name)
+
+	// Generate all SKU combinations automatically from option values
+	productSKUs, err := p.generateAllSKUCombinations(data.Name, data.OptionValues)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the full CreateProductRequest with generated SKUs
+	createProductRequest := &request.CreateProductRequest{
+		Name:              data.Name,
+		Description:       data.Description,
+		ShortDescription:  data.ShortDescription,
+		ImageURL:          data.ImageURL,
+		Slug:              data.Slug,
+		BasePrice:         data.BasePrice,
+		SalePrice:         data.SalePrice,
+		IsFeatured:        data.IsFeatured,
+		SaleStartDate:     data.SaleStartDate,
+		SaleEndDate:       data.SaleEndDate,
+		Status:            string(constants.PRODUCT_STATUS_ACTIVE),
+		BrandID:           data.BrandID,
+		CategoryID:        data.CategoryID,
+		UserID:            data.UserID,
+		ProductAttributes: data.ProductAttributes,
+		OptionValues:      data.OptionValues,
+		ProductSKUs:       *productSKUs,
+	}
+
+	// Call the existing CreateProduct function
+	return p.CreateProduct(createProductRequest)
+}
+
+// generateAllSKUCombinations generates all possible SKU combinations from option values
+func (p *productService) generateAllSKUCombinations(productName string, optionValues map[int64][]string) (*[]request.CreateProductSKURequest, error) {
+	// Clean up option values - remove empty options
+	cleanedOptions := make(map[int64][]string)
+	optionIDs := make([]int64, 0)
+
+	for optionID, values := range optionValues {
+		if len(values) > 0 {
+			cleanedOptions[optionID] = values
+			optionIDs = append(optionIDs, optionID)
+		}
+	}
+
+	// If no options, create a single default SKU
+	if len(cleanedOptions) == 0 {
+		defaultSKU := []request.CreateProductSKURequest{
+			{
+				SKU:   productName + "_default",
+				Price: 0,
+				Stock: 100, // Default stock
+			},
+		}
+		return &defaultSKU, nil
+	}
+
+	// Generate all combinations using cartesian product
+	combinations := p.generateCartesianProduct(cleanedOptions, optionIDs)
+
+	// Create SKU requests from combinations
+	var productSKUs []request.CreateProductSKURequest
+	for _, combination := range combinations {
+		sku := p.buildSKUFromCombination(productName, combination, optionIDs)
+		price := p.calculateSKUPrice(combination) // You can customize this logic
+		stock := p.calculateDefaultStock()        // You can customize this logic
+
+		productSKUs = append(productSKUs, request.CreateProductSKURequest{
+			SKU:   sku,
+			Price: price,
+			Stock: stock,
+		})
+	}
+
+	return &productSKUs, nil
+}
+
+// generateCartesianProduct generates all possible combinations of option values
+func (p *productService) generateCartesianProduct(optionValues map[int64][]string, optionIDs []int64) []map[int64]string {
+	if len(optionIDs) == 0 {
+		return []map[int64]string{}
+	}
+
+	// Start with the first option
+	var result []map[int64]string
+	firstOptionID := optionIDs[0]
+	firstValues := optionValues[firstOptionID]
+
+	for _, value := range firstValues {
+		combination := make(map[int64]string)
+		combination[firstOptionID] = value
+		result = append(result, combination)
+	}
+
+	// Add remaining options one by one
+	for i := 1; i < len(optionIDs); i++ {
+		optionID := optionIDs[i]
+		values := optionValues[optionID]
+
+		var newResult []map[int64]string
+		for _, existingCombination := range result {
+			for _, value := range values {
+				newCombination := make(map[int64]string)
+				// Copy existing combination
+				for k, v := range existingCombination {
+					newCombination[k] = v
+				}
+				// Add new option value
+				newCombination[optionID] = value
+				newResult = append(newResult, newCombination)
+			}
+		}
+		result = newResult
+	}
+
+	return result
+}
+
+// buildSKUFromCombination builds SKU string from option combination
+func (p *productService) buildSKUFromCombination(productName string, combination map[int64]string, optionIDs []int64) string {
+	skuParts := []string{productName}
+
+	// Add option values in consistent order
+	for _, optionID := range optionIDs {
+		if value, exists := combination[optionID]; exists {
+			// Clean up value for SKU (remove spaces, special chars)
+			cleanValue := strings.ReplaceAll(value, " ", "")
+			skuParts = append(skuParts, cleanValue)
+		}
+	}
+
+	return strings.Join(skuParts, "_")
+}
+
+// calculateSKUPrice calculates price for SKU based on options (customize as needed)
+func (p *productService) calculateSKUPrice(combination map[int64]string) float64 {
+	return 0
+}
+
+// calculateDefaultStock calculates default stock for SKU (customize as needed)
+func (p *productService) calculateDefaultStock() int32 {
+	return 10
 }

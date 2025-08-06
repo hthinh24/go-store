@@ -92,6 +92,7 @@ func setupRouter(productController *controller.ProductController) *gin.Engine {
 
 			// Protected routes (will add authentication middleware later)
 			products.POST("", productController.CreateProduct())
+			products.POST("/no-sku", productController.CreateProductWithoutSKU())
 			products.DELETE("/:id", productController.DeleteProductByID())
 		}
 

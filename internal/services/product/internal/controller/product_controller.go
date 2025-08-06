@@ -140,3 +140,26 @@ func (pc *ProductController) DeleteProductByID() gin.HandlerFunc {
 		c.JSON(http.StatusOK, response)
 	}
 }
+
+func (pc *ProductController) CreateProductWithoutSKU() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req request.CreateProductWithoutSKURequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			pc.logger.Error("Invalid request body: %v", err)
+			response := rest.NewErrorResponse(rest.BadRequestError, "Invalid request body")
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		product, err := pc.productService.CreateProductWithoutSKU(&req)
+		if err != nil {
+			pc.logger.Error("Failed to create product: %v", err)
+			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to create product")
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		response := rest.NewAPIResponse(http.StatusOK, "Product created successfully", product)
+		c.JSON(http.StatusCreated, response)
+	}
+}

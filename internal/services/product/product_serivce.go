@@ -9,5 +9,6 @@ type ProductService interface {
 	GetProductByID(id int64) (*response.ProductResponse, error)
 	GetProductDetailByID(id int64) (*response.ProductDetailResponse, error)
 	CreateProduct(data *request.CreateProductRequest) (*response.ProductDetailResponse, error)
+	CreateProductWithoutSKU(data *request.CreateProductWithoutSKURequest) (*response.ProductDetailResponse, error)
 	DeleteProduct(id int64) error
 }

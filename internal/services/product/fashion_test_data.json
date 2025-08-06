@@ -1,0 +1,155 @@
+{
+  "t_shirt_example": {
+    "name": "Premium Cotton T-Shirt",
+    "description": "High-quality 100% organic cotton t-shirt with modern fit. Perfect for casual wear and layering. Machine washable and pre-shrunk for lasting comfort.",
+    "short_description": "Premium organic cotton t-shirt with modern fit",
+    "image_url": "https://example.com/images/premium-cotton-tshirt.jpg",
+    "slug": "premium-cotton-t-shirt",
+    "base_price": 29.99,
+    "sale_price": 24.99,
+    "is_featured": true,
+    "sale_start_date": "2024-08-01T00:00:00Z",
+    "sale_end_date": "2024-08-31T23:59:59Z",
+    "status": "active",
+    "brand_id": 11,
+    "category_id": 15,
+    "user_id": 1,
+    "product_attributes": {
+      "12": ["100% Organic Cotton"],
+      "13": ["Modern Fit"],
+      "21": ["1 Year"]
+    },
+    "option_values": {
+      "2": ["XS", "S", "M", "L", "XL"],
+      "1": ["Black", "White", "Navy", "Gray"],
+      "5": ["Regular", "Slim"]
+    }
+  },
+  "jeans_example": {
+    "name": "Classic Straight Leg Jeans",
+    "description": "Timeless straight leg jeans made from premium denim with stretch for comfort. Features classic 5-pocket design and traditional styling that never goes out of fashion.",
+    "short_description": "Classic straight leg jeans with stretch comfort",
+    "image_url": "https://example.com/images/classic-straight-jeans.jpg",
+    "slug": "classic-straight-leg-jeans",
+    "base_price": 89.99,
+    "sale_price": null,
+    "is_featured": false,
+    "sale_start_date": null,
+    "sale_end_date": null,
+    "status": "active",
+    "brand_id": 16,
+    "category_id": 15,
+    "user_id": 1,
+    "product_attributes": {
+      "12": ["98% Cotton, 2% Elastane"],
+      "13": ["Straight Leg"],
+      "16": ["Solid"]
+    },
+    "option_values": {
+      "2": ["28", "30", "32", "34", "36", "38"],
+      "2": ["30", "32", "34", "36"],
+      "1": ["Dark Blue", "Light Blue", "Black"]
+    }
+  },
+  "dress_example": {
+    "name": "Elegant Summer Dress",
+    "description": "Beautiful flowing summer dress perfect for any occasion. Made from lightweight breathable fabric with a flattering A-line silhouette. Features adjustable straps and side pockets.",
+    "short_description": "Elegant flowing summer dress with adjustable straps",
+    "image_url": "https://example.com/images/elegant-summer-dress.jpg",
+    "slug": "elegant-summer-dress",
+    "base_price": 79.99,
+    "sale_price": 59.99,
+    "is_featured": true,
+    "sale_start_date": "2024-07-15T00:00:00Z",
+    "sale_end_date": "2024-09-15T23:59:59Z",
+    "status": "active",
+    "brand_id": 13,
+    "category_id": 16,
+    "user_id": 1,
+    "product_attributes": {
+      "12": ["100% Rayon"],
+      "13": ["A-Line"],
+      "14": ["Sleeveless"]
+    },
+    "option_values": {
+      "2": ["XS", "S", "M", "L", "XL"],
+      "1": ["Floral Blue", "Floral Pink", "Black", "Navy"],
+      "5": ["Short", "Regular", "Long"]
+    }
+  },
+  "sneakers_example": {
+    "name": "Urban Runner Sneakers",
+    "description": "Modern athletic sneakers designed for both performance and style. Features breathable mesh upper, cushioned sole, and durable rubber outsole. Perfect for running, gym, or casual wear.",
+    "short_description": "Modern athletic sneakers for performance and style",
+    "image_url": "https://example.com/images/urban-runner-sneakers.jpg",
+    "slug": "urban-runner-sneakers",
+    "base_price": 129.99,
+    "sale_price": 99.99,
+    "is_featured": true,
+    "sale_start_date": "2024-08-01T00:00:00Z",
+    "sale_end_date": "2024-08-31T23:59:59Z",
+    "status": "active",
+    "brand_id": 11,
+    "category_id": 18,
+    "user_id": 1,
+    "product_attributes": {
+      "12": ["Synthetic Mesh"],
+      "24": ["Water Resistant"],
+      "21": ["1 Year"]
+    },
+    "option_values": {
+      "2": ["7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11"],
+      "1": ["Black/White", "Navy/Gray", "Red/Black", "White"],
+      "5": ["Regular", "Wide"]
+    }
+  },
+  "jacket_example": {
+    "name": "Winter Puffer Jacket",
+    "description": "Warm and stylish puffer jacket perfect for cold weather. Features water-resistant outer shell, down insulation, and multiple pockets. Hood is detachable for versatile styling.",
+    "short_description": "Warm puffer jacket with detachable hood",
+    "image_url": "https://example.com/images/winter-puffer-jacket.jpg",
+    "slug": "winter-puffer-jacket",
+    "base_price": 199.99,
+    "sale_price": null,
+    "is_featured": false,
+    "sale_start_date": null,
+    "sale_end_date": null,
+    "status": "active",
+    "brand_id": 12,
+    "category_id": 15,
+    "user_id": 1,
+    "product_attributes": {
+      "12": ["Polyester with Down"],
+      "24": ["Water Resistant"],
+      "21": ["2 Years"]
+    },
+    "option_values": {
+      "2": ["XS", "S", "M", "L", "XL", "XXL"],
+      "1": ["Black", "Navy", "Olive", "Burgundy"]
+    }
+  },
+  "simple_accessory_example": {
+    "name": "Leather Belt",
+    "description": "Classic genuine leather belt with metal buckle. Versatile design works with both casual and formal outfits. Available in multiple colors and sizes.",
+    "short_description": "Classic genuine leather belt with metal buckle",
+    "image_url": "https://example.com/images/leather-belt.jpg",
+    "slug": "leather-belt",
+    "base_price": 49.99,
+    "sale_price": null,
+    "is_featured": false,
+    "sale_start_date": null,
+    "sale_end_date": null,
+    "status": "active",
+    "brand_id": 20,
+    "category_id": 19,
+    "user_id": 1,
+    "product_attributes": {
+      "12": ["Genuine Leather"],
+      "21": ["1 Year"]
+    },
+    "option_values": {
+      "2": ["32", "34", "36", "38", "40", "42"],
+      "1": ["Black", "Brown", "Beige"]
+    }
+  }
+}
