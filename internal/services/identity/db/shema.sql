@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS users
     id            BIGSERIAL    NOT NULL,
     email         varchar(255) NOT NULL UNIQUE,
     password      varchar(255),
-    provider_id    varchar(255) NOT NULL DEFAULT 1,
-    provider_name  varchar(255) NOT NULL DEFAULT 'APP',
+    provider_id   varchar(255) NOT NULL DEFAULT 1,
+    provider_name varchar(255) NOT NULL DEFAULT 'APP',
     last_name     varchar(255) NOT NULL,
     first_name    varchar(255) NOT NULL,
     avatar        varchar(255),
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS permissions
 
 CREATE TABLE IF NOT EXISTS user_roles
 (
-    ID       BIGSERIAL NOT NULL,
+    ID      BIGSERIAL NOT NULL,
     user_id int8      NOT NULL,
     role_id int8      NOT NULL,
     PRIMARY KEY (ID)
@@ -46,17 +46,17 @@ CREATE TABLE IF NOT EXISTS user_roles
 
 CREATE TABLE IF NOT EXISTS role_permissions
 (
-    ID             BIGSERIAL NOT NULL,
+    ID            BIGSERIAL NOT NULL,
     permission_id int8      NOT NULL,
     role_id       int8      NOT NULL,
     PRIMARY KEY (ID)
 );
 
 ALTER TABLE user_roles
-    ADD CONSTRAINT FKuser_has_r352169 FOREIGN KEY (user_id) REFERENCES users (id);
+    ADD CONSTRAINT FKuser_has_r352169 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
 ALTER TABLE user_roles
-    ADD CONSTRAINT FKuser_has_r355910 FOREIGN KEY (role_id) REFERENCES roles (id);
+    ADD CONSTRAINT FKuser_has_r355910 FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE;
 ALTER TABLE role_permissions
-    ADD CONSTRAINT FKrole_has_p648170 FOREIGN KEY (permission_id) REFERENCES permissions (id);
+    ADD CONSTRAINT FKrole_has_p648170 FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE SET NULL;
 ALTER TABLE role_permissions
-    ADD CONSTRAINT FKrole_has_p131704 FOREIGN KEY (role_id) REFERENCES roles (id);
+    ADD CONSTRAINT FKrole_has_p131704 FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE SET NULL;

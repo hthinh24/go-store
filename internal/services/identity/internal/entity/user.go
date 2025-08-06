@@ -1,11 +1,12 @@
 package entity
 
 import (
+	"github.com/hthinh24/go-store/internal/pkg/entity"
 	"time"
 )
 
 type User struct {
-	BaseEntity
+	entity.BaseEntity
 	Email        string    `json:"email" gorm:"column:email;unique;not null"`
 	Password     string    `json:"password" gorm:"column:password"`
 	ProviderID   string    `json:"provider_id" gorm:"column:provider_id;not null"`

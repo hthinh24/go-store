@@ -1,0 +1,142 @@
+package controller
+
+import (
+	"errors"
+	customErr "github.com/hthinh24/go-store/services/product/internal/errors"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/hthinh24/go-store/internal/pkg/logger"
+	"github.com/hthinh24/go-store/internal/pkg/rest"
+	"github.com/hthinh24/go-store/services/product"
+	"github.com/hthinh24/go-store/services/product/internal/dto/request"
+)
+
+type ProductController struct {
+	logger         logger.Logger
+	productService product.ProductService
+}
+
+func NewProductController(logger logger.Logger, productService product.ProductService) *ProductController {
+	return &ProductController{
+		logger:         logger,
+		productService: productService,
+	}
+}
+
+func (pc *ProductController) GetProductByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idParam := c.Param("id")
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			pc.logger.Error("Invalid product ID: %v", err)
+			response := rest.NewErrorResponse(rest.BadRequestError, "Invalid product ID")
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		product, err := pc.productService.GetProductByID(id)
+		if err != nil {
+			pc.logger.Error("Failed to get product: %v", err)
+
+			if errors.Is(err, customErr.ErrProductNotFound{}) {
+				response := rest.NewErrorResponse(rest.NotFoundError, "Product not found")
+				c.JSON(http.StatusNotFound, response)
+				return
+			}
+
+			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to get product")
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		response := rest.NewAPIResponse(http.StatusOK, "Product retrieved successfully", product)
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func (pc *ProductController) GetProductDetailByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idParam := c.Param("id")
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			pc.logger.Error("Invalid product ID: %v", err)
+			response := rest.NewErrorResponse(rest.BadRequestError, "Invalid product ID")
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		productDetail, err := pc.productService.GetProductDetailByID(id)
+		if err != nil {
+			pc.logger.Error("Failed to get product detail: %v", err)
+
+			if errors.Is(err, customErr.ErrProductNotFound{}) {
+				response := rest.NewErrorResponse(rest.NotFoundError, "Product not found")
+				c.JSON(http.StatusNotFound, response)
+				return
+			}
+
+			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to get product detail")
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		response := rest.NewAPIResponse(http.StatusOK, "Product detail retrieved successfully", productDetail)
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func (pc *ProductController) CreateProduct() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req request.CreateProductRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			pc.logger.Error("Invalid request body: %v", err)
+			response := rest.NewErrorResponse(rest.BadRequestError, "Invalid request body")
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		product, err := pc.productService.CreateProduct(&req)
+		if err != nil {
+			pc.logger.Error("Failed to create product: %v", err)
+			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to create product")
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		response := rest.NewAPIResponse(http.StatusOK, "Product created successfully", product)
+		c.JSON(http.StatusCreated, response)
+	}
+}
+
+func (pc *ProductController) DeleteProductByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idParam := c.Param("id")
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			pc.logger.Error("Invalid product ID: %v", err)
+			response := rest.NewErrorResponse(rest.BadRequestError, "Invalid product ID")
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		err = pc.productService.DeleteProduct(id)
+		if err != nil {
+			pc.logger.Error("Failed to delete product: %v", err)
+
+			if errors.Is(err, customErr.ErrProductNotFound{}) {
+				response := rest.NewErrorResponse(rest.NotFoundError, "Product not found")
+				c.JSON(http.StatusNotFound, response)
+				return
+			}
+
+			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to delete product")
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		response := rest.NewAPIResponse(http.StatusOK, "Product deleted successfully", nil)
+		c.JSON(http.StatusOK, response)
+	}
+}

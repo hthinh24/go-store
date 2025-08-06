@@ -118,8 +118,8 @@ func setupRouter(authController *controller.AuthController, userController *cont
 		{
 			users.GET(":id", userController.GetUserByID())
 
-			users.PUT("/profile", userController.UpdateUserProfile())
-			users.PATCH("/password", userController.UpdateUserPassword())
+			users.PUT("/:id/profile", userController.UpdateUserProfile())
+			users.PATCH("/:id/password", userController.UpdateUserPassword())
 
 			// Admin only routes
 			users.GET("", authMiddleware.RequireRole("admin"), userController.GetUsers())

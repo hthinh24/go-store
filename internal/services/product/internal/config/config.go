@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -20,6 +19,8 @@ type AppConfig struct {
 	// Server Configuration
 	ServerPort string
 	ServerHost string
+
+	UserServiceURL string
 
 	// Log Configuration
 	LogLevel string
@@ -51,8 +52,10 @@ func LoadConfig(filename string) (*AppConfig, error) {
 		DBName:     getEnv("DB_NAME", "go_store_identity"),
 		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
 
-		ServerPort: getEnv("SERVER_PORT", "8080"),
+		ServerPort: getEnv("SERVER_PORT", "8081"),
 		ServerHost: getEnv("SERVER_HOST", "localhost"),
+
+		UserServiceURL: getEnv("USER_SERVICE_URL", "http://localhost:8080"),
 
 		LogLevel: getEnv("LOG_LEVEL", "info"),
 

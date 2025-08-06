@@ -1,0 +1,122 @@
+{
+  "name": "ASUS ROG Gaming Laptop",
+  "description": "High-performance gaming laptop with advanced graphics and processing power. Perfect for gaming enthusiasts and professionals.",
+  "short_description": "Intel i7 gaming laptop with RTX 4070 and 144Hz display",
+  "image_url": "https://example.com/images/asus-rog-gaming-laptop.jpg",
+  "slug": "asus-rog-gaming-laptop",
+  "base_price": 1299.99,
+  "sale_price": 1199.99,
+  "is_featured": true,
+  "sale_start_date": "2025-08-01T00:00:00Z",
+  "sale_end_date": "2025-08-31T23:59:59Z",
+  "status": "active",
+  "brand_id": 4,
+  "category_id": 9,
+  "user_id": 1,
+  "product_attributes": {
+    "1": ["Intel Core i7"],
+    "4": ["NVIDIA RTX 4070"],
+    "5": ["15.6 inch"],
+    "6": ["Windows 11 Home"],
+    "17": ["Multiple Colors Available"],
+    "18": ["2.5kg"],
+    "21": ["2 years"]
+  },
+  "product_skus": [
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Black_256GB_16GB",
+      "price": 0,
+      "stock": 10
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Black_256GB_32GB",
+      "price": 200,
+      "stock": 8
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Black_512GB_16GB",
+      "price": 150,
+      "stock": 12
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Black_512GB_32GB",
+      "price": 350,
+      "stock": 9
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Black_1TB_16GB",
+      "price": 300,
+      "stock": 7
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Black_1TB_32GB",
+      "price": 500,
+      "stock": 5
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Silver_256GB_16GB",
+      "price": 0,
+      "stock": 11
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Silver_256GB_32GB",
+      "price": 200,
+      "stock": 9
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Silver_512GB_16GB",
+      "price": 150,
+      "stock": 13
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Silver_512GB_32GB",
+      "price": 350,
+      "stock": 8
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Silver_1TB_16GB",
+      "price": 300,
+      "stock": 6
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_Silver_1TB_32GB",
+      "price": 500,
+      "stock": 4
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_SpaceGray_256GB_16GB",
+      "price": 0,
+      "stock": 9
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_SpaceGray_256GB_32GB",
+      "price": 200,
+      "stock": 7
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_SpaceGray_512GB_16GB",
+      "price": 150,
+      "stock": 11
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_SpaceGray_512GB_32GB",
+      "price": 350,
+      "stock": 6
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_SpaceGray_1TB_16GB",
+      "price": 300,
+      "stock": 8
+    },
+    {
+      "sku": "ASUS_ROG_Gaming_Laptop_SpaceGray_1TB_32GB",
+      "price": 500,
+      "stock": 3
+    }
+  ],
+  "option_values": {
+    "1": ["Black", "Silver", "Space Gray"],
+    "3": ["256GB", "512GB", "1TB"],
+    "4": ["16GB", "32GB"]
+  }
+}
