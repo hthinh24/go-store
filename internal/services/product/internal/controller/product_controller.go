@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"errors"
-	customErr "github.com/hthinh24/go-store/services/product/internal/errors"
 	"net/http"
 	"strconv"
 
@@ -38,16 +36,7 @@ func (pc *ProductController) GetProductByID() gin.HandlerFunc {
 
 		product, err := pc.productService.GetProductByID(id)
 		if err != nil {
-			pc.logger.Error("Failed to get product: %v", err)
-
-			if errors.Is(err, customErr.ErrProductNotFound{}) {
-				response := rest.NewErrorResponse(rest.NotFoundError, "Product not found")
-				c.JSON(http.StatusNotFound, response)
-				return
-			}
-
-			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to get product")
-			c.JSON(http.StatusInternalServerError, response)
+			pc.ErrorHandler(c, err, "Failed to get product")
 			return
 		}
 
@@ -69,16 +58,7 @@ func (pc *ProductController) GetProductDetailByID() gin.HandlerFunc {
 
 		productDetail, err := pc.productService.GetProductDetailByID(id)
 		if err != nil {
-			pc.logger.Error("Failed to get product detail: %v", err)
-
-			if errors.Is(err, customErr.ErrProductNotFound{}) {
-				response := rest.NewErrorResponse(rest.NotFoundError, "Product not found")
-				c.JSON(http.StatusNotFound, response)
-				return
-			}
-
-			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to get product detail")
-			c.JSON(http.StatusInternalServerError, response)
+			pc.ErrorHandler(c, err, "Failed to get product detail")
 			return
 		}
 
@@ -99,13 +79,11 @@ func (pc *ProductController) CreateProduct() gin.HandlerFunc {
 
 		product, err := pc.productService.CreateProduct(&req)
 		if err != nil {
-			pc.logger.Error("Failed to create product: %v", err)
-			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to create product")
-			c.JSON(http.StatusInternalServerError, response)
+			pc.ErrorHandler(c, err, "Failed to create product")
 			return
 		}
 
-		response := rest.NewAPIResponse(http.StatusOK, "Product created successfully", product)
+		response := rest.NewAPIResponse(http.StatusCreated, "Product created successfully", product)
 		c.JSON(http.StatusCreated, response)
 	}
 }
@@ -123,16 +101,7 @@ func (pc *ProductController) DeleteProductByID() gin.HandlerFunc {
 
 		err = pc.productService.DeleteProduct(id)
 		if err != nil {
-			pc.logger.Error("Failed to delete product: %v", err)
-
-			if errors.Is(err, customErr.ErrProductNotFound{}) {
-				response := rest.NewErrorResponse(rest.NotFoundError, "Product not found")
-				c.JSON(http.StatusNotFound, response)
-				return
-			}
-
-			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to delete product")
-			c.JSON(http.StatusInternalServerError, response)
+			pc.ErrorHandler(c, err, "Failed to delete product")
 			return
 		}
 
@@ -153,13 +122,11 @@ func (pc *ProductController) CreateProductWithoutSKU() gin.HandlerFunc {
 
 		product, err := pc.productService.CreateProductWithoutSKU(&req)
 		if err != nil {
-			pc.logger.Error("Failed to create product: %v", err)
-			response := rest.NewErrorResponse(rest.InternalServerErrorError, "Failed to create product")
-			c.JSON(http.StatusInternalServerError, response)
+			pc.ErrorHandler(c, err, "Failed to create product")
 			return
 		}
 
-		response := rest.NewAPIResponse(http.StatusOK, "Product created successfully", product)
+		response := rest.NewAPIResponse(http.StatusCreated, "Product created successfully", product)
 		c.JSON(http.StatusCreated, response)
 	}
 }

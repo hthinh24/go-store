@@ -128,20 +128,24 @@ CREATE TABLE product_product_attribute_value
 
 CREATE TABLE product_sku
 (
-    id            BIGSERIAL      NOT NULL,
-    sku           varchar(255)   NOT NULL,
-    sku_signature varchar(255)   NOT NULL UNIQUE,
-    price         DECIMAL(10, 2) NOT NULL DEFAULT 0.00, -- Final price, not additional cost
-    status        varchar(255)   NOT NULL DEFAULT 'ACTIVE',
-    product_id    int8           NOT NULL,
-    created_by    varchar(255)   NOT NULL,
-    updated_by    varchar(255)   NOT NULL,
-    created_at    timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    version       int4           NOT NULL DEFAULT 1,
+    id              BIGSERIAL      NOT NULL,
+    sku             varchar(255)   NOT NULL,
+    sku_signature   varchar(255)   NOT NULL UNIQUE,
+    extra_price     DECIMAL(10, 2) NOT NULL DEFAULT 0, -- Additional price for the SKU
+    sale_type       VARCHAR(20)             DEFAULT NULL, -- "Percentage" or "Fixed"
+    sale_value      DECIMAL(10, 2)          DEFAULT NULL,
+    sale_start_date TIMESTAMP               DEFAULT NULL,
+    sale_end_date   TIMESTAMP               DEFAULT NULL,
+    status          varchar(255)   NOT NULL DEFAULT 'ACTIVE',
+    product_id      int8           NOT NULL,
+    created_by      varchar(255)   NOT NULL,
+    updated_by      varchar(255)   NOT NULL,
+    created_at      timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version         int4           NOT NULL DEFAULT 1,
     PRIMARY KEY (id),
 
-    CONSTRAINT CHKproduct_sku_price CHECK (price >= 0)
+    CONSTRAINT CHKproduct_sku_price CHECK (extra_price >= 0)
 );
 
 CREATE TABLE product_sku_value

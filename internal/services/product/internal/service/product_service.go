@@ -306,11 +306,15 @@ func (p *productService) createProductAttributeValueEntity(productAttributeID in
 
 func (p *productService) createProductSKUEntity(productID int64, productName string, data *request.CreateProductSKURequest) *entity.ProductSKU {
 	return &entity.ProductSKU{
-		SKU:          data.SKU,
-		SKUSignature: p.generateSKUSignature(productName, data.SKU),
-		Price:        data.Price,
-		Status:       string(constants.PRODUCT_STATUS_ACTIVE),
-		ProductID:    productID,
+		SKU:           data.SKU,
+		SKUSignature:  p.generateSKUSignature(productName, data.SKU),
+		ExtraPrice:    data.ExtraPrice,
+		SaleType:      data.SaleType,
+		SaleValue:     data.SaleValue,
+		SaleStartDate: data.SaleStartDate,
+		SaleEndDate:   data.SaleEndDate,
+		Status:        string(constants.PRODUCT_STATUS_ACTIVE),
+		ProductID:     productID,
 	}
 }
 
@@ -389,7 +393,7 @@ func (p *productService) createProductDetailResponse(product *entity.Product) *r
 
 	var productSKUResponses []*response.ProductSKUWithInventoryResponse
 	for _, sku := range *productSKUWithInventories {
-		productSKUResponse := p.createProductSKUWithInventoryResponse(&sku)
+		productSKUResponse := p.createProductSKUWithInventoryResponse(product.BasePrice, &sku)
 		productSKUResponses = append(productSKUResponses, productSKUResponse)
 	}
 
@@ -434,16 +438,21 @@ func (p *productService) createProductWithOptionValuesResponse(option *entity.Pr
 }
 
 func (p *productService) createProductSKUWithInventoryResponse(
-	productSKUWithInventory *repository.ProductSKUWithInventory,
+	productPrice float64,
+	productSKUWithInventory *repository.ProductSKUDetail,
 ) *response.ProductSKUWithInventoryResponse {
+	productSKUPrice := p.calculateProductSKUPrice(productPrice, productSKUWithInventory.ExtraPrice)
 	return &response.ProductSKUWithInventoryResponse{
-		ID:           productSKUWithInventory.ID,
-		SKU:          productSKUWithInventory.SKU,
-		SKUSignature: productSKUWithInventory.SKUSignature,
-		Price:        productSKUWithInventory.Price,
-		Stock:        productSKUWithInventory.Stock,
-		Status:       productSKUWithInventory.Status,
-		ProductID:    productSKUWithInventory.ProductID,
+		ID:            productSKUWithInventory.ID,
+		SKU:           productSKUWithInventory.SKU,
+		SKUSignature:  productSKUWithInventory.SKUSignature,
+		Price:         productSKUPrice,
+		SalePrice:     p.calculateProductSKUSalePrice(productSKUPrice, productSKUWithInventory.SaleType, productSKUWithInventory.SaleValue),
+		SaleStartDate: productSKUWithInventory.SaleStartDate,
+		SaleEndDate:   productSKUWithInventory.SaleEndDate,
+		Stock:         productSKUWithInventory.Stock,
+		Status:        productSKUWithInventory.Status,
+		ProductID:     productSKUWithInventory.ProductID,
 	}
 }
 
@@ -452,6 +461,35 @@ func (p *productService) generateSKUSignature(name string, sku string) string {
 	skuSignature = strings.ReplaceAll(sku, " ", "-")
 
 	return skuSignature
+}
+
+func (p *productService) calculateProductSKUPrice(productPrice float64, extraPrice float64) float64 {
+	if extraPrice < 0 {
+		return productPrice
+	}
+
+	finalPrice := productPrice + productPrice*extraPrice
+	return finalPrice
+}
+
+func (p *productService) calculateProductSKUSalePrice(productSKUPrice float64, saleType *string, saleValue *float64) *float64 {
+	if saleType == nil || saleValue == nil {
+		return nil
+	}
+
+	if *saleType == constants.SALE_TYPE_PERCENTAGE {
+		// Calculate sale price as a percentage discount
+		finalPrice := productSKUPrice - (productSKUPrice * *saleValue)
+		return &finalPrice
+	} else if *saleType == constants.SALE_TYPE_FIXED {
+		finalPrice := productSKUPrice - *saleValue
+		if finalPrice < 0 {
+			finalPrice = 0
+		}
+		return &finalPrice
+	}
+
+	return nil
 }
 
 // CreateProductWithoutSKU Help to create a product without SKU (for case app only have backend API)
@@ -506,9 +544,9 @@ func (p *productService) generateAllSKUCombinations(productName string, optionVa
 	if len(cleanedOptions) == 0 {
 		defaultSKU := []request.CreateProductSKURequest{
 			{
-				SKU:   productName + "_default",
-				Price: 0,
-				Stock: 100, // Default stock
+				SKU:        productName + "_default",
+				ExtraPrice: 0,
+				Stock:      100,
 			},
 		}
 		return &defaultSKU, nil
@@ -521,13 +559,13 @@ func (p *productService) generateAllSKUCombinations(productName string, optionVa
 	var productSKUs []request.CreateProductSKURequest
 	for _, combination := range combinations {
 		sku := p.buildSKUFromCombination(productName, combination, optionIDs)
-		price := p.calculateSKUPrice(combination) // You can customize this logic
-		stock := p.calculateDefaultStock()        // You can customize this logic
+		price := constants.DEFAULT_PRICE
+		stock := constants.DEFAULT_STOCK
 
 		productSKUs = append(productSKUs, request.CreateProductSKURequest{
-			SKU:   sku,
-			Price: price,
-			Stock: stock,
+			SKU:        sku,
+			ExtraPrice: price,
+			Stock:      int32(stock),
 		})
 	}
 
@@ -589,14 +627,4 @@ func (p *productService) buildSKUFromCombination(productName string, combination
 	}
 
 	return strings.Join(skuParts, "_")
-}
-
-// calculateSKUPrice calculates price for SKU based on options (customize as needed)
-func (p *productService) calculateSKUPrice(combination map[int64]string) float64 {
-	return 0
-}
-
-// calculateDefaultStock calculates default stock for SKU (customize as needed)
-func (p *productService) calculateDefaultStock() int32 {
-	return 10
 }

@@ -16,6 +16,7 @@ var (
 	BadRequestError          = ApiError{BadRequestCode, BadRequestStatus}
 	InternalServerErrorError = ApiError{InternalServerErrorCode, InternalServerErrorStatus}
 	NotFoundError            = ApiError{NotFoundCode, NotFoundStatus}
+	ConflictError            = ApiError{ConflictCode, ConflictStatus}
 
 	UnauthorizedError = ApiError{UnauthorizedCode, UnauthorizedStatus}
 	ForbiddenError    = ApiError{ForbiddenCode, ForbiddenStatus}
@@ -27,6 +28,7 @@ const (
 	BadRequestCode          = 400
 	InternalServerErrorCode = 500
 	NotFoundCode            = 404
+	ConflictCode            = 409
 
 	UnauthorizedCode = 401
 	ForbiddenCode    = 403
@@ -38,6 +40,7 @@ const (
 	BadRequestStatus          = "Bad Request"
 	InternalServerErrorStatus = "Internal Server Error"
 	NotFoundStatus            = "Not Found"
+	ConflictStatus            = "Conflict"
 
 	UnauthorizedStatus = "Unauthorized"
 	ForbiddenStatus    = "Forbidden"

@@ -12,12 +12,16 @@ type ProductWithOptionValues struct {
 	OptionValues string `json:"option_values"`
 }
 
-type ProductSKUWithInventory struct {
-	ID           int64   `json:"id"`
-	SKU          string  `json:"sku"`
-	SKUSignature string  `json:"sku_signature"`
-	Price        float64 `json:"price"`
-	Stock        int32   `json:"stock"`
-	Status       string  `json:"status"`
-	ProductID    int64   `json:"product_id"`
+type ProductSKUDetail struct {
+	ID            int64    `json:"id"`
+	SKU           string   `json:"sku"`
+	SKUSignature  string   `json:"sku_signature"`
+	ExtraPrice    float64  `json:"extra_price"`
+	SaleType      *string  `json:"sale_type,omitempty"`       // "Percentage" or "Fixed"
+	SaleValue     *float64 `json:"sale_value,omitempty"`      // Discounted price
+	SaleStartDate *string  `json:"sale_start_date,omitempty"` // Sale start date in ISO 8601 format
+	SaleEndDate   *string  `json:"sale_end_date,omitempty"`   // Sale end date in ISO 8601 format
+	Stock         int32    `json:"stock"`
+	Status        string   `json:"status"`
+	ProductID     int64    `json:"product_id"`
 }

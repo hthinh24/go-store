@@ -1,15 +1,22 @@
 package entity
 
-import "github.com/hthinh24/go-store/internal/pkg/entity"
+import (
+	"github.com/hthinh24/go-store/internal/pkg/entity"
+	"time"
+)
 
 type ProductSKU struct {
 	entity.BaseEntity
-	SKU          string  `json:"sku" gorm:"column:sku;type:varchar(255);not null"`
-	SKUSignature string  `json:"sku_signature" gorm:"column:sku_signature;type:varchar(255);not null;uniqueIndex"`
-	Price        float64 `json:"price" gorm:"column:price;type:decimal(10,2);not null;default:0.00"`
-	Status       string  `json:"status" gorm:"column:status;type:varchar(255);not null"`
-	ProductID    int64   `json:"product_id" gorm:"column:product_id;not null"`
-	Version      int32   `json:"version" gorm:"column:version;not null;default:1"`
+	SKU           string     `json:"sku" gorm:"column:sku;type:varchar(255);not null"`
+	SKUSignature  string     `json:"sku_signature" gorm:"column:sku_signature;type:varchar(255);not null;uniqueIndex"`
+	ExtraPrice    float64    `json:"price" gorm:"column:extra_price;type:decimal(10,2);not null;default:0.00"`
+	SaleType      *string    `json:"sale_type" gorm:"column:sale_type;type:varchar(255);not null;default:'normal'"`
+	SaleValue     *float64   `json:"sale_price" gorm:"column:sale_value;type:decimal(10,2);not null;default:0.00"`
+	SaleStartDate *time.Time `json:"sale_start_date,omitempty" gorm:"column:sale_start_date"`
+	SaleEndDate   *time.Time `json:"sale_end_date,omitempty" gorm:"column:sale_end_date"`
+	Status        string     `json:"status" gorm:"column:status;type:varchar(255);not null"`
+	ProductID     int64      `json:"product_id" gorm:"column:product_id;not null"`
+	Version       int32      `json:"version" gorm:"column:version;not null;default:1"`
 }
 
 type ProductSKUValue struct {

@@ -24,9 +24,13 @@ type CreateProductRequest struct {
 }
 
 type CreateProductSKURequest struct {
-	SKU   string  `json:"sku" binding:"required"`   // Stock Keeping Unit
-	Price float64 `json:"price" binding:"required"` // Price of the SKU
-	Stock int32   `json:"stock" binding:"required"` // Stock quantity
+	SKU           string     `json:"sku" binding:"required"`   // Stock Keeping Unit
+	ExtraPrice    float64    `json:"price" binding:"required"` // Extra price for the SKU
+	SaleType      *string    `json:"sale_type"`                // "Percentage" or "Fixed" for sale type
+	SaleValue     *float64   `json:"sale_value"`               // Discounted price for the SKU
+	SaleStartDate *time.Time `json:"sale_start_date"`
+	SaleEndDate   *time.Time `json:"sale_end_date"`
+	Stock         int32      `json:"stock" binding:"required"` // Stock quantity
 }
 
 type CreateProductWithoutSKURequest struct {

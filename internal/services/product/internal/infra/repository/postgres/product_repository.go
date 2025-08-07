@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"strings"
+
 	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/product/internal/dto/repository"
 	"github.com/hthinh24/go-store/services/product/internal/entity"
@@ -57,13 +59,14 @@ func (p *productRepository) FindProductOptionsInfoByProductID(productID int64) (
 	return &productOptionsInfo, nil
 }
 
-func (p *productRepository) FindProductSKUsByProductID(id int64) (*[]repository.ProductSKUWithInventory, error) {
+func (p *productRepository) FindProductSKUsByProductID(id int64) (*[]repository.ProductSKUDetail, error) {
 	p.logger.Info("Finding product SKUs by product ID:", id)
 
-	var productSKUsWithInventory []repository.ProductSKUWithInventory
+	var productSKUsWithInventory []repository.ProductSKUDetail
 	if err := p.db.
 		Table(entity.ProductSKU{}.TableName()+" AS ps").
-		Select("ps.id, ps.sku, ps.sku_signature, ps.price, pi.available_stock AS stock, ps.status, ps.product_id").
+		Select("ps.id, ps.sku, ps.sku_signature, ps.extra_price,"+
+			"ps.sale_type", "ps.sale_value", "ps.sale_start_date", "ps.sale_end_date").
 		Joins("JOIN product_inventory AS pi ON ps.id = pi.product_sku_id").
 		Where("ps.product_id = ?", id).
 		Find(&productSKUsWithInventory).Error; err != nil {
@@ -105,7 +108,45 @@ func (p *productRepository) CreateProduct(product *entity.Product) error {
 
 	if err := p.db.Create(product).Error; err != nil {
 		p.logger.Error("Failed to create product:", product, "Error:", err)
-		return err
+
+		// Check for specific database constraint violations
+		errMsg := strings.ToLower(err.Error())
+
+		// Check for duplicate slug constraint
+		if strings.Contains(errMsg, "duplicate") && strings.Contains(errMsg, "slug") {
+			return errors.ErrProductAlreadyExists{Slug: product.Slug}
+		}
+
+		// Check for duplicate name constraint
+		if strings.Contains(errMsg, "duplicate") && strings.Contains(errMsg, "name") {
+			return errors.ErrProductAlreadyExists{Name: product.Name}
+		}
+
+		// Check for foreign key violations
+		if strings.Contains(errMsg, "foreign key") {
+			if strings.Contains(errMsg, "category") {
+				return errors.ErrCategoryNotFound{ID: product.CategoryID}
+			}
+			if strings.Contains(errMsg, "brand") {
+				return errors.ErrBrandNotFound{ID: product.BrandID}
+			}
+			if strings.Contains(errMsg, "user") {
+				return errors.ErrUserNotFound{ID: product.UserID}
+			}
+		}
+
+		// Check for check constraint violations
+		if strings.Contains(errMsg, "check") || strings.Contains(errMsg, "constraint") {
+			if strings.Contains(errMsg, "price") {
+				return errors.ErrInvalidProductData{Field: "price", Message: "price must be greater than 0"}
+			}
+			if strings.Contains(errMsg, "status") {
+				return errors.ErrInvalidProductData{Field: "status", Message: "invalid status value"}
+			}
+		}
+
+		// Generic database transaction error
+		return errors.ErrDatabaseTransaction{Operation: "create product"}
 	}
 
 	p.logger.Info("Product created successfully:", product.ID)
@@ -117,7 +158,17 @@ func (p *productRepository) CreateProductAttributeInfo(productAttributeInfos *[]
 
 	if err := p.db.Create(productAttributeInfos).Error; err != nil {
 		p.logger.Error("Failed to create product attribute infos:", productAttributeInfos, "Error:", err)
-		return err
+
+		errMsg := strings.ToLower(err.Error())
+
+		// Check for foreign key violations
+		if strings.Contains(errMsg, "foreign key") {
+			if strings.Contains(errMsg, "product_attribute") {
+				return errors.ErrAttributeNotFound{ID: 0} // We'd need to parse which specific ID failed
+			}
+		}
+
+		return errors.ErrDatabaseTransaction{Operation: "create product attribute info"}
 	}
 
 	p.logger.Info("Product attribute infos created successfully")
@@ -129,7 +180,17 @@ func (p *productRepository) CreateProductOptionInfo(productOptionInfos *[]entity
 
 	if err := p.db.Create(productOptionInfos).Error; err != nil {
 		p.logger.Error("Failed to create product option infos:", productOptionInfos, "Error:", err)
-		return err
+
+		errMsg := strings.ToLower(err.Error())
+
+		// Check for foreign key violations
+		if strings.Contains(errMsg, "foreign key") {
+			if strings.Contains(errMsg, "product_option") {
+				return errors.ErrOptionNotFound{ID: 0} // We'd need to parse which specific ID failed
+			}
+		}
+
+		return errors.ErrDatabaseTransaction{Operation: "create product option info"}
 	}
 
 	p.logger.Info("Product option infos created successfully")
@@ -167,7 +228,24 @@ func (p *productRepository) CreateProductSKUs(productSKUs *[]entity.ProductSKU) 
 
 	if err := p.db.Create(productSKUs).Error; err != nil {
 		p.logger.Error("Failed to create product SKUs:", productSKUs, "Error:", err)
-		return err
+
+		errMsg := strings.ToLower(err.Error())
+
+		// Check for duplicate SKU constraint
+		if strings.Contains(errMsg, "duplicate") && strings.Contains(errMsg, "sku") {
+			// Extract SKU from productSKUs if possible
+			if len(*productSKUs) > 0 {
+				return errors.ErrSKUAlreadyExists{SKU: (*productSKUs)[0].SKU}
+			}
+			return errors.ErrSKUAlreadyExists{SKU: "unknown"}
+		}
+
+		// Check for invalid price
+		if strings.Contains(errMsg, "check") && strings.Contains(errMsg, "price") {
+			return errors.ErrInvalidSKUData{SKU: "unknown", Message: "price must be greater than or equal to 0"}
+		}
+
+		return errors.ErrDatabaseTransaction{Operation: "create product SKUs"}
 	}
 
 	p.logger.Info("Product SKUs created successfully")
