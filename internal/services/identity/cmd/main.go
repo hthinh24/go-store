@@ -42,19 +42,19 @@ func main() {
 	appLogger.Info("Database connected successfully")
 
 	// Initialize repositories
-	userRepo := repository.NewUserRepository(appLogger, db)
-	authRepo := repository.NewAuthRepository(appLogger, db)
+	userRepo := repository.NewUserRepository(logger.WithComponent(cfg.LogLevel, "USER-REPOSITORY"), db)
+	authRepo := repository.NewAuthRepository(logger.WithComponent(cfg.LogLevel, "AUTH-REPOSITORY"), db)
 
 	// Initialize services
-	authService := service.NewAuthService(appLogger, userRepo, authRepo, cfg)
-	userService := service.NewUserService(appLogger, userRepo, authRepo)
+	authService := service.NewAuthService(logger.WithComponent(cfg.LogLevel, "AUTH-SERVICE"), userRepo, authRepo, cfg)
+	userService := service.NewUserService(logger.WithComponent(cfg.LogLevel, "USER-SERVICE"), userRepo, authRepo)
 
 	// Initialize middleware
-	authMiddleware := middleware.NewAuthMiddleware(appLogger, authRepo, cfg.JWTSecret)
+	authMiddleware := middleware.NewAuthMiddleware(logger.WithComponent(cfg.LogLevel, "AUTH-MIDDLEWARE"), authRepo, cfg.JWTSecret)
 
 	// Initialize controllers
-	authController := controller.NewAuthController(appLogger, authService)
-	userController := controller.NewUserController(appLogger, userService)
+	authController := controller.NewAuthController(logger.WithComponent(cfg.LogLevel, "AUTH-CONTROLLER"), authService)
+	userController := controller.NewUserController(logger.WithComponent(cfg.LogLevel, "USER-CONTROLLER"), userService)
 
 	// Setup router
 	router := setupRouter(authController, userController, authMiddleware)
@@ -119,7 +119,9 @@ func setupRouter(authController *controller.AuthController, userController *cont
 			users.GET(":id", userController.GetUserByID())
 
 			users.PUT("/:id/profile", userController.UpdateUserProfile())
-			users.PATCH("/:id/register-merchant", userController.UpdateToMerchantAccount())
+			users.PATCH("/:id/register-merchant",
+				authMiddleware.RequireRole(string(constants.RoleMerchant)),
+				userController.UpdateToMerchantAccount())
 			users.PATCH("/:id/password", userController.UpdateUserPassword())
 
 			// Admin only routes

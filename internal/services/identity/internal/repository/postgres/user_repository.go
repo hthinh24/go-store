@@ -78,6 +78,7 @@ func (u *userRepository) UpdateUserProfile(user *entity.User) error {
 	err := u.DB.Save(user).Error
 	if err != nil {
 		u.Logger.Error("Error updating user with ID %d: %v", user.ID, err)
+		return err
 	}
 
 	u.Logger.Info("User with ID %d updated successfully", user.ID)

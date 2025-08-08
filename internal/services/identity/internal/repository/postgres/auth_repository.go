@@ -1,8 +1,10 @@
 package postgres
 
 import (
+	"errors"
 	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/identity/internal/entity"
+	identityErrors "github.com/hthinh24/go-store/services/identity/internal/errors"
 	"gorm.io/gorm"
 )
 
@@ -23,8 +25,11 @@ func (a *authRepository) FindRoleByName(name string) (*entity.Role, error) {
 
 	var role entity.Role
 	if err := a.db.Where("name = ?", name).First(&role).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, identityErrors.ErrRoleNotFound{Name: name}
+		}
 		a.logger.Error("Failed to find role by name:", name, "Error:", err)
-		return nil, err
+		return nil, identityErrors.ErrDatabaseTransaction{Operation: "find role"}
 	}
 
 	return &role, nil
@@ -41,7 +46,7 @@ func (a *authRepository) FindUserPermissionsByUserID(userID int64) (*[]entity.Pe
 		Find(&permissions).Error
 	if err != nil {
 		a.logger.Error("Failed to find permissions for user ID:", userID, "Error:", err)
-		return nil, err
+		return nil, identityErrors.ErrDatabaseTransaction{Operation: "find user permissions"}
 	}
 
 	return &permissions, nil
@@ -58,7 +63,7 @@ func (a *authRepository) FindAllUserRolesByUserID(userID int64) (*[]entity.Role,
 		Find(&roles).Error
 	if err != nil {
 		a.logger.Error("Failed to find roles for user ID:", userID, "Error:", err)
-		return nil, err
+		return nil, identityErrors.ErrDatabaseTransaction{Operation: "find user roles"}
 	}
 
 	return &roles, nil
@@ -75,7 +80,7 @@ func (a *authRepository) FindAllPermissionsByRoleNames(roleNames []string) (*[]e
 		Find(&permissions).Error
 	if err != nil {
 		a.logger.Error("Failed to find permissions for role names:", roleNames, "Error:", err)
-		return nil, err
+		return nil, identityErrors.ErrDatabaseTransaction{Operation: "find permissions by role names"}
 	}
 
 	return &permissions, nil
@@ -92,7 +97,7 @@ func (a *authRepository) FindAllPermissionsByRoleIDs(roleIDs []int64) (*[]entity
 		Find(&permissions).Error
 	if err != nil {
 		a.logger.Error("Failed to find permissions for role IDs:", roleIDs, "Error:", err)
-		return nil, err
+		return nil, identityErrors.ErrDatabaseTransaction{Operation: "find permissions by role IDs"}
 	}
 
 	return &permissions, nil
@@ -104,7 +109,7 @@ func (a *authRepository) FindPermissionByName(name string) (*entity.Permission, 
 	var permission entity.Permission
 	if err := a.db.Where("name = ?", name).First(&permission).Error; err != nil {
 		a.logger.Error("Failed to find permission by name:", name, "Error:", err)
-		return nil, err
+		return nil, identityErrors.ErrDatabaseTransaction{Operation: "find permission"}
 	}
 
 	return &permission, nil
@@ -115,7 +120,7 @@ func (u *authRepository) AddRoleToUser(userRole *entity.UserRoles) error {
 
 	if err := u.db.Create(&userRole).Error; err != nil {
 		u.logger.Error("Error adding role to user with ID %d: %v", userRole.UserID, err)
-		return err
+		return identityErrors.ErrDatabaseTransaction{Operation: "add role to user"}
 	}
 
 	u.logger.Info("Role added to user with ID %d successfully", userRole.UserID)

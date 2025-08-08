@@ -42,8 +42,14 @@ func (a *authService) Login(request request.AuthRequest) (response.AuthResponse,
 		return response.AuthResponse{}, rest.AuthenticationError{}
 	}
 
+	token, err := a.generateToken(user)
+	if err != nil {
+		a.logger.Error("Error generating token for user:", user.Email, err)
+		return response.AuthResponse{}, err
+	}
+
 	a.logger.Info("User logged in successfully with email:", request.Email)
-	return a.createAuthResponse(user)
+	return a.createAuthResponse(token)
 }
 
 func (a *authService) Logout(token string) error {
@@ -51,12 +57,7 @@ func (a *authService) Logout(token string) error {
 	panic("implement me")
 }
 
-func (a *authService) createAuthResponse(user *entity.User) (response.AuthResponse, error) {
-	token, err := a.generateToken(user)
-	if err != nil {
-		a.logger.Error("Error generating token for user:", user.Email, err)
-		return response.AuthResponse{}, err
-	}
+func (a *authService) createAuthResponse(token string) (response.AuthResponse, error) {
 
 	return response.AuthResponse{Token: token}, nil
 }
@@ -98,7 +99,7 @@ func (a *authService) generateToken(user *entity.User) (string, error) {
 		UserID:      user.ID,
 		Email:       user.Email,
 		Roles:       roleNames,
-		Permissions: permissions, // Include all user permissions
+		Permissions: permissions,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(a.config.JWTExpiresIn)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

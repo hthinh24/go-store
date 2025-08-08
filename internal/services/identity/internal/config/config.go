@@ -18,8 +18,9 @@ type AppConfig struct {
 	DBSSLMode  string
 
 	// JWT Configuration
-	JWTSecret    string
-	JWTExpiresIn time.Duration
+	JWTSecret           string
+	JWTExpiresIn        time.Duration
+	JWTRefreshExpiresIn time.Duration
 
 	// Server Configuration
 	ServerPort string
@@ -55,8 +56,9 @@ func LoadConfig(filename string) (*AppConfig, error) {
 		DBName:     getEnv("DB_NAME", "go_store_identity"),
 		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
 
-		JWTSecret:    getEnv("JWT_SECRET", ""),
-		JWTExpiresIn: time.Hour * 24, // Default to 24 hours
+		JWTSecret:           getEnv("JWT_SECRET", ""),
+		JWTExpiresIn:        time.Hour * 24,      // Default to 24 hours
+		JWTRefreshExpiresIn: time.Hour * 24 * 30, // Default to 30 days
 
 		ServerPort: getEnv("SERVER_PORT", "8080"),
 		ServerHost: getEnv("SERVER_HOST", "localhost"),

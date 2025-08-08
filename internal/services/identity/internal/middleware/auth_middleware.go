@@ -1,18 +1,18 @@
 package middleware
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/internal/pkg/rest"
 	"github.com/hthinh24/go-store/services/identity"
+	"net/http"
+	"strings"
 )
 
 type AuthMiddleware struct {
 	logger         logger.Logger
+	authService    identity.AuthService
 	authRepository identity.AuthRepository
 	jwtSecret      string
 }
@@ -56,7 +56,7 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := m.validateToken(tokenString)
+		claims, err := m.validateToken(c, tokenString)
 		if err != nil {
 			m.logger.Error("Failed to validate JWT token", "error", err)
 			c.JSON(http.StatusUnauthorized, rest.ErrorResponse{
@@ -66,6 +66,8 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		// If a new token was generated, add it to response headers
 
 		// Set user info in context
 		c.Set("user_id", claims.UserID)
@@ -136,7 +138,7 @@ func (m *AuthMiddleware) RequireRole(role string) gin.HandlerFunc {
 	}
 }
 
-func (m *AuthMiddleware) validateToken(tokenString string) (*JWTClaims, error) {
+func (m *AuthMiddleware) validateToken(c *gin.Context, tokenString string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(m.jwtSecret), nil
 	})
@@ -145,7 +147,8 @@ func (m *AuthMiddleware) validateToken(tokenString string) (*JWTClaims, error) {
 	}
 
 	// Convert claims to our custom JWTClaims type & check validity
-	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+	claims, ok := token.Claims.(*JWTClaims)
+	if ok {
 		return claims, nil
 	}
 
