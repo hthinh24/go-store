@@ -4,26 +4,23 @@ A modern, scalable e-commerce platform built with Go microservices architecture,
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                           Client                                │
-└─────────────────────┬───────────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────────┐
-│                      API Gateway (Nginx)                       │
-└─┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────────┘
-  │         │         │         │         │         │
-┌─▼──────┐ ┌▼──────┐ ┌▼──────┐ ┌▼──────┐ ┌▼──────┐ ┌▼──────┐
-│Identity│ │  Cart │ │Product│ │Inventory│ │ Order │ │Future │
-│Service │ │Service│ │Service│ │ Service │ │Service│ │Services│
-└─┬──────┘ └┬──────┘ └┬──────┘ └┬───────┘ └┬──────┘ └───────┘
-  │         │         │         │          │
-┌─▼──────┐ ┌▼──────┐ ┌▼──────┐ ┌▼───────┐ ┌▼──────┐
-│Identity│ │ Cart  │ │Product│ │Inventory│ │ Order │
-│   DB   │ │  DB   │ │  DB   │ │   DB    │ │  DB   │
-│(Postgres)│(Postgres)│(Postgres)│(Postgres)│(Postgres)
-└────────┘ └───────┘ └───────┘ └────────┘ └───────┘
-```
+![GoStore Architecture](V1.png)
+
+The platform follows a microservices architecture pattern with the following key components:
+
+- **API Gateway (Nginx)**: Central entry point for all client requests with routing and load balancing
+- **Business Services**: Independent, scalable microservices handling specific business domains
+- **Database Layer**: PostgreSQL databases for persistent storage, Redis for caching
+- **Service Communication**: RESTful APIs for inter-service communication
+
+### Current Services:
+- **Identity Service**: Authentication, authorization, and user management
+- **Product Service**: Product catalog with advanced SKU management
+
+### Planned Services:
+- **Cart Service**: Shopping cart management
+- **Inventory Service**: Stock and warehouse management  
+- **Order Service**: Order processing and fulfillment
 
 ## 🚀 Services
 
