@@ -8,21 +8,21 @@ package constants
 type ProductStatus string
 
 const (
-	PRODUCT_STATUS_ACTIVE       ProductStatus = "ACTIVE"       // Available for purchase
-	PRODUCT_STATUS_INACTIVE     ProductStatus = "INACTIVE"     // Temporarily disabled
-	PRODUCT_STATUS_OUT_OF_STOCK ProductStatus = "OUT_OF_STOCK" // No inventory available
-	PRODUCT_STATUS_DISCONTINUED ProductStatus = "DISCONTINUED" // No longer available
+	ProductStatusActive       ProductStatus = "ACTIVE"       // Available for purchase
+	ProductStatusInactive     ProductStatus = "INACTIVE"     // Temporarily disabled
+	ProductStatusOutOfStock   ProductStatus = "OUT_OF_STOCK" // No inventory available
+	ProductStatusDiscontinued ProductStatus = "DISCONTINUED" // No longer available
 
-	SALE_TYPE_PERCENTAGE = "PERCENTAGE" // Sale type for percentage discount
-	SALE_TYPE_FIXED      = "FIXED"      // Sale type for fixed amount discount
+	SaleTypePercentage = "PERCENTAGE" // Sale type for percentage discount
+	SaleTypeFixed      = "FIXED"      // Sale type for fixed amount discount
 
-	DEFAULT_STOCK = 0
-	DEFAULT_PRICE = 0.00
+	DefaultStock = 0
+	DefaultPrice = 0.00
 )
 
 func IsValidProductStatus(status string) bool {
 	switch ProductStatus(status) {
-	case PRODUCT_STATUS_ACTIVE, PRODUCT_STATUS_INACTIVE, PRODUCT_STATUS_OUT_OF_STOCK, PRODUCT_STATUS_DISCONTINUED:
+	case ProductStatusActive, ProductStatusInactive, ProductStatusOutOfStock, ProductStatusDiscontinued:
 		return true
 	default:
 		return false

@@ -38,18 +38,16 @@ CREATE TABLE IF NOT EXISTS permissions
 
 CREATE TABLE IF NOT EXISTS user_roles
 (
-    ID      BIGSERIAL NOT NULL,
-    user_id int8      NOT NULL,
-    role_id int8      NOT NULL,
-    PRIMARY KEY (ID)
+    user_id int8 NOT NULL,
+    role_id int8 NOT NULL,
+    PRIMARY KEY (user_id, role_id)
 );
 
 CREATE TABLE IF NOT EXISTS role_permissions
 (
-    ID            BIGSERIAL NOT NULL,
-    permission_id int8      NOT NULL,
-    role_id       int8      NOT NULL,
-    PRIMARY KEY (ID)
+    role_id       int8 NOT NULL,
+    permission_id int8 NOT NULL,
+    PRIMARY KEY (role_id, permission_id)
 );
 
 ALTER TABLE user_roles

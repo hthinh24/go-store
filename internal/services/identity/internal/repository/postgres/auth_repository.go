@@ -110,14 +110,14 @@ func (a *authRepository) FindPermissionByName(name string) (*entity.Permission, 
 	return &permission, nil
 }
 
-func (u *authRepository) AddRoleToUser(role entity.UserRoles) error {
-	u.logger.Info("Adding role to user with ID: %d", role.UserID)
+func (u *authRepository) AddRoleToUser(userRole *entity.UserRoles) error {
+	u.logger.Info("Adding role to user with ID: %d", userRole.UserID)
 
-	if err := u.db.Create(&role).Error; err != nil {
-		u.logger.Error("Error adding role to user with ID %d: %v", role.UserID, err)
+	if err := u.db.Create(&userRole).Error; err != nil {
+		u.logger.Error("Error adding role to user with ID %d: %v", userRole.UserID, err)
 		return err
 	}
 
-	u.logger.Info("Role added to user with ID %d successfully", role.UserID)
+	u.logger.Info("Role added to user with ID %d successfully", userRole.UserID)
 	return nil
 }

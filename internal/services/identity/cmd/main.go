@@ -119,6 +119,7 @@ func setupRouter(authController *controller.AuthController, userController *cont
 			users.GET(":id", userController.GetUserByID())
 
 			users.PUT("/:id/profile", userController.UpdateUserProfile())
+			users.PATCH("/:id/register-merchant", userController.UpdateToMerchantAccount())
 			users.PATCH("/:id/password", userController.UpdateUserPassword())
 
 			// Admin only routes
@@ -144,7 +145,7 @@ func initUserData(userRepository identity.UserRepository, authRepository identit
 	}
 
 	// Assign admin role to the user
-	role, err := authRepository.FindRoleByName(string(constants.ROLE_ADMIN))
+	role, err := authRepository.FindRoleByName(string(constants.RoleAdmin))
 	if err != nil {
 		return err
 	}
@@ -154,7 +155,7 @@ func initUserData(userRepository identity.UserRepository, authRepository identit
 		RoleID: role.ID,
 	}
 
-	if err := authRepository.AddRoleToUser(adminRole); err != nil {
+	if err := authRepository.AddRoleToUser(&adminRole); err != nil {
 		return err
 	}
 
@@ -174,9 +175,9 @@ func createAdminUser() *entity.User {
 		LastName:     "Admin",
 		FirstName:    "Admin",
 		Avatar:       "https://example.com/avatar.png",
-		Gender:       string(constants.OTHER),
+		Gender:       string(constants.GenderOther),
 		PhoneNumber:  "1234567890",
 		DateOfBirth:  time.Now(),
-		Status:       string(constants.ACTIVE),
+		Status:       string(constants.UserStatusActive),
 	}
 }

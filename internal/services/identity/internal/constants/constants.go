@@ -4,35 +4,35 @@ type Gender string
 type UserStatus string
 
 const (
-	MALE   Gender = "MALE"
-	FEMALE Gender = "FEMALE"
-	OTHER  Gender = "OTHER"
+	GenderMale   Gender = "MALE"
+	GenderFemale Gender = "FEMALE"
+	GenderOther  Gender = "OTHER"
 )
 
 const (
-	ACTIVE   UserStatus = "ACTIVE"
-	INACTIVE UserStatus = "INACTIVE"
-	DELETED  UserStatus = "DELETED"
+	UserStatusActive   UserStatus = "ACTIVE"
+	UserStatusInactive UserStatus = "INACTIVE"
+	UserStatusDeleted  UserStatus = "DELETED"
 )
 
 func GetGender(s string) string {
 	switch s {
-	case string(MALE):
-		return string(MALE)
-	case string(FEMALE):
-		return string(FEMALE)
+	case string(GenderMale):
+		return string(GenderMale)
+	case string(GenderFemale):
+		return string(GenderFemale)
 	default:
-		return string(OTHER)
+		return string(GenderOther)
 	}
 }
 
 func GetStatus(s string) string {
 	switch s {
-	case string(ACTIVE):
-		return string(ACTIVE)
-	case string(DELETED):
-		return string(DELETED)
+	case string(UserStatusActive):
+		return string(UserStatusActive)
+	case string(UserStatusDeleted):
+		return string(UserStatusDeleted)
 	default:
-		return string(INACTIVE)
+		return string(UserStatusInactive)
 	}
 }

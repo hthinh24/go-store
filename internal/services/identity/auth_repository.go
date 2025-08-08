@@ -8,5 +8,5 @@ type AuthRepository interface {
 	FindAllPermissionsByRoleNames(roleNames []string) (*[]entity.Permission, error)
 	FindAllPermissionsByRoleIDs(roleIDs []int64) (*[]entity.Permission, error)
 	FindPermissionByName(name string) (*entity.Permission, error)
-	AddRoleToUser(role entity.UserRoles) error
+	AddRoleToUser(userRole *entity.UserRoles) error
 }

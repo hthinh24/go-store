@@ -177,6 +177,30 @@ func (u *UserController) UpdateUserPassword() func(ctx *gin.Context) {
 	}
 }
 
+func (u *UserController) UpdateToMerchantAccount() func(ctx *gin.Context) {
+	return func(ctx *gin.Context) {
+		idStr := ctx.Param("id")
+
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			u.logger.Error("Invalid user ID:", idStr, "Error:", err)
+			ctx.JSON(http.StatusBadRequest, rest.ErrorResponse{ApiError: rest.BadRequestError, Message: "Invalid user ID format"})
+			return
+		}
+
+		u.logger.Info("Updating user to merchant account with ID:", id)
+
+		if err := u.userService.UpdateToMerchantAccount(int64(id)); err != nil {
+			u.logger.Error("Error updating user to merchant account with ID:", id, "Error:", err)
+			ctx.JSON(http.StatusInternalServerError, rest.ErrorResponse{ApiError: rest.InternalServerErrorError, Message: "Failed to update user to merchant account"})
+			return
+		}
+
+		u.logger.Info("Successfully updated user to merchant account with ID:", id)
+		ctx.JSON(http.StatusOK, rest.NewAPIResponse(http.StatusOK, "User updated to merchant account successfully", nil))
+	}
+}
+
 func (u *UserController) DeleteUser() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		idStr := ctx.Param("id")

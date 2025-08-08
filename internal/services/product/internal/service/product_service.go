@@ -313,7 +313,7 @@ func (p *productService) createProductSKUEntity(productID int64, productName str
 		SaleValue:     data.SaleValue,
 		SaleStartDate: data.SaleStartDate,
 		SaleEndDate:   data.SaleEndDate,
-		Status:        string(constants.PRODUCT_STATUS_ACTIVE),
+		Status:        string(constants.ProductStatusActive),
 		ProductID:     productID,
 	}
 }
@@ -477,11 +477,11 @@ func (p *productService) calculateProductSKUSalePrice(productSKUPrice float64, s
 		return nil
 	}
 
-	if *saleType == constants.SALE_TYPE_PERCENTAGE {
+	if *saleType == constants.SaleTypePercentage {
 		// Calculate sale price as a percentage discount
 		finalPrice := productSKUPrice - (productSKUPrice * *saleValue)
 		return &finalPrice
-	} else if *saleType == constants.SALE_TYPE_FIXED {
+	} else if *saleType == constants.SaleTypeFixed {
 		finalPrice := productSKUPrice - *saleValue
 		if finalPrice < 0 {
 			finalPrice = 0
@@ -514,7 +514,7 @@ func (p *productService) CreateProductWithoutSKU(data *request.CreateProductWith
 		IsFeatured:        data.IsFeatured,
 		SaleStartDate:     data.SaleStartDate,
 		SaleEndDate:       data.SaleEndDate,
-		Status:            string(constants.PRODUCT_STATUS_ACTIVE),
+		Status:            string(constants.ProductStatusActive),
 		BrandID:           data.BrandID,
 		CategoryID:        data.CategoryID,
 		UserID:            data.UserID,
@@ -559,8 +559,8 @@ func (p *productService) generateAllSKUCombinations(productName string, optionVa
 	var productSKUs []request.CreateProductSKURequest
 	for _, combination := range combinations {
 		sku := p.buildSKUFromCombination(productName, combination, optionIDs)
-		price := constants.DEFAULT_PRICE
-		stock := constants.DEFAULT_STOCK
+		price := constants.DefaultPrice
+		stock := constants.DefaultStock
 
 		productSKUs = append(productSKUs, request.CreateProductSKURequest{
 			SKU:        sku,

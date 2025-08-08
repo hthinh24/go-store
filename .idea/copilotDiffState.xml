@@ -12,6 +12,15 @@
             </PendingDiffInfo>
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/internal/services/identity/internal/constants/constants.go">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/internal/services/identity/internal/constants/constants.go" />
+              <option name="originalContent" value="package constants&#10;&#10;type Gender string&#10;type UserStatus string&#10;&#10;const (&#10;&#9;GENDER_MALE   Gender = &quot;MALE&quot;&#10;&#9;GENDER_FEMALE Gender = &quot;FEMALE&quot;&#10;&#9;GENDER_OTHER  Gender = &quot;OTHER&quot;&#10;)&#10;&#10;const (&#10;&#9;USER_STATUS_ACTIVE   UserStatus = &quot;ACTIVE&quot;&#10;&#9;USER_STATUS_INACTIVE UserStatus = &quot;INACTIVE&quot;&#10;&#9;USER_STATUS_DELETED  UserStatus = &quot;DELETED&quot;&#10;)&#10;&#10;func GetGender(s string) string {&#10;&#9;switch s {&#10;&#9;case string(GENDER_MALE):&#10;&#9;&#9;return string(GENDER_MALE)&#10;&#9;case string(GENDER_FEMALE):&#10;&#9;&#9;return string(GENDER_FEMALE)&#10;&#9;default:&#10;&#9;&#9;return string(GENDER_OTHER)&#10;&#9;}&#10;}&#10;&#10;func GetStatus(s string) string {&#10;&#9;switch s {&#10;&#9;case string(USER_STATUS_ACTIVE):&#10;&#9;&#9;return string(USER_STATUS_ACTIVE)&#10;&#9;case string(USER_STATUS_DELETED):&#10;&#9;&#9;return string(USER_STATUS_DELETED)&#10;&#9;default:&#10;&#9;&#9;return string(USER_STATUS_INACTIVE)&#10;&#9;}&#10;}&#10;" />
+              <option name="updatedContent" value="package constants&#10;&#10;type Gender string&#10;type UserStatus string&#10;&#10;const (&#10;&#9;GenderMale   Gender = &quot;MALE&quot;&#10;&#9;GenderFemale Gender = &quot;FEMALE&quot;&#10;&#9;GenderOther  Gender = &quot;OTHER&quot;&#10;)&#10;&#10;const (&#10;&#9;UserStatusActive   UserStatus = &quot;ACTIVE&quot;&#10;&#9;UserStatusInactive UserStatus = &quot;INACTIVE&quot;&#10;&#9;UserStatusDeleted  UserStatus = &quot;DELETED&quot;&#10;)&#10;&#10;func GetGender(s string) string {&#10;&#9;switch s {&#10;&#9;case string(GenderMale):&#10;&#9;&#9;return string(GenderMale)&#10;&#9;case string(GenderFemale):&#10;&#9;&#9;return string(GenderFemale)&#10;&#9;default:&#10;&#9;&#9;return string(GenderOther)&#10;&#9;}&#10;}&#10;&#10;func GetStatus(s string) string {&#10;&#9;switch s {&#10;&#9;case string(UserStatusActive):&#10;&#9;&#9;return string(UserStatusActive)&#10;&#9;case string(UserStatusDeleted):&#10;&#9;&#9;return string(UserStatusDeleted)&#10;&#9;default:&#10;&#9;&#9;return string(UserStatusInactive)&#10;&#9;}&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

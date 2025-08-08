@@ -7,6 +7,7 @@ import (
 	"github.com/hthinh24/go-store/services/identity/internal/dto/request"
 	"github.com/hthinh24/go-store/services/identity/internal/dto/response"
 	"github.com/hthinh24/go-store/services/identity/internal/entity"
+	"github.com/hthinh24/go-store/services/identity/internal/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -129,6 +130,35 @@ func (u *userService) UpdateUserPassword(id int64, data *request.UpdateUserPassw
 	return createUserResponse(user), nil
 }
 
+func (u *userService) UpdateToMerchantAccount(userID int64) error {
+	u.logger.Info("Updating user to merchant account with ID:", userID)
+
+	// TODO - Implement logic to update user to merchant account
+
+	user, err := u.userRepository.FindUserByID(userID)
+	if err != nil {
+		u.logger.Error("Error finding user by ID:", userID, "Error:", err)
+		return err
+	}
+
+	if user.Status != string(constants.UserStatusActive) {
+		u.logger.Error("User is not active, cannot update to merchant account:", userID)
+		return errors.ErrUserNotActive{}
+	}
+
+	role, err := u.authRepository.FindRoleByName(string(constants.RoleMerchant))
+	if err != nil {
+		return err
+	}
+
+	userRoles := createUserRoleEntity(user, role)
+	if err := u.authRepository.AddRoleToUser(userRoles); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *userService) DeleteUser(id int64) error {
 	u.logger.Info("Deleting user with ID:", id)
 
@@ -158,17 +188,10 @@ func (u *userService) createUserEntity(user *request.CreateUserRequest) *entity.
 	}
 }
 
-func createUserResponse(user *entity.User) *response.UserResponse {
-	return &response.UserResponse{
-		ID:          user.ID,
-		Email:       user.Email,
-		LastName:    user.LastName,
-		FirstName:   user.FirstName,
-		Avatar:      user.Avatar,
-		Gender:      user.Gender,
-		PhoneNumber: user.PhoneNumber,
-		DateOfBirth: user.DateOfBirth,
-		Status:      user.Status,
+func createUserRoleEntity(user *entity.User, role *entity.Role) *entity.UserRoles {
+	return &entity.UserRoles{
+		UserID: user.ID,
+		RoleID: role.ID,
 	}
 }
 
@@ -196,18 +219,29 @@ func updateUserEntity(user *entity.User, data *request.UpdateUserProfileRequest)
 	}
 }
 
+func createUserResponse(user *entity.User) *response.UserResponse {
+	return &response.UserResponse{
+		ID:          user.ID,
+		Email:       user.Email,
+		LastName:    user.LastName,
+		FirstName:   user.FirstName,
+		Avatar:      user.Avatar,
+		Gender:      user.Gender,
+		PhoneNumber: user.PhoneNumber,
+		DateOfBirth: user.DateOfBirth,
+		Status:      user.Status,
+	}
+}
+
 func (u *userService) setUserRoleToUser(user *entity.User) error {
-	role, err := u.authRepository.FindRoleByName(string(constants.ROLE_USER))
+	role, err := u.authRepository.FindRoleByName(string(constants.RoleUser))
 	if err != nil {
 		return err
 	}
 
-	userHasRole := entity.UserRoles{
-		UserID: user.ID,
-		RoleID: role.ID,
-	}
+	userRoles := createUserRoleEntity(user, role)
 
-	if err := u.authRepository.AddRoleToUser(userHasRole); err != nil {
+	if err := u.authRepository.AddRoleToUser(userRoles); err != nil {
 		u.logger.Error("Error assigning role to user:", err)
 		return err
 	}

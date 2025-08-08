@@ -11,5 +11,6 @@ type UserService interface {
 	CreateUser(data *request.CreateUserRequest) (*response.UserResponse, error)
 	UpdateUserProfile(id int64, data *request.UpdateUserProfileRequest) (*response.UserResponse, error)
 	UpdateUserPassword(id int64, data *request.UpdateUserPasswordRequest) (*response.UserResponse, error)
+	UpdateToMerchantAccount(userID int64) error
 	DeleteUser(id int64) error
 }
