@@ -4,7 +4,7 @@ A modern, scalable e-commerce platform built with Go microservices architecture,
 
 ## 🏗️ Architecture
 
-![GoStore Architecture](V1.png)
+![GoStore Architecture](architectureV1.png)
 
 The platform follows a microservices architecture pattern with the following key components:
 
