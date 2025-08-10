@@ -50,7 +50,7 @@ func main() {
 	userService := service.NewUserService(logger.WithComponent(cfg.LogLevel, "USER-SERVICE"), userRepo, authRepo)
 
 	// Initialize middleware
-	authMiddleware := middleware.NewAuthMiddleware(logger.WithComponent(cfg.LogLevel, "AUTH-MIDDLEWARE"), authRepo, cfg.JWTSecret)
+	authMiddleware := middleware.NewAuthMiddleware(logger.WithComponent(cfg.LogLevel, "AUTH-MIDDLEWARE"), cfg.JWTSecret)
 
 	// Initialize controllers
 	authController := controller.NewAuthController(logger.WithComponent(cfg.LogLevel, "AUTH-CONTROLLER"), authService)
@@ -104,6 +104,7 @@ func setupRouter(authController *controller.AuthController, userController *cont
 			users.POST("", userController.CreateUser())
 
 			auth.POST("/login", authController.Login())
+			auth.GET("/verify", authController.Verify())
 		}
 
 		auth.Use(authMiddleware.AuthRequired())
@@ -120,7 +121,6 @@ func setupRouter(authController *controller.AuthController, userController *cont
 
 			users.PUT("/:id/profile", userController.UpdateUserProfile())
 			users.PATCH("/:id/register-merchant",
-				authMiddleware.RequireRole(string(constants.RoleMerchant)),
 				userController.UpdateToMerchantAccount())
 			users.PATCH("/:id/password", userController.UpdateUserPassword())
 

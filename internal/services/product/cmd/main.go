@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/hthinh24/go-store/internal/pkg/middleware/auth"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -50,7 +51,7 @@ func main() {
 		productService)
 
 	// Setup router
-	router := setupRouter(productController)
+	router := setupRouter(productController, cfg)
 
 	// Start server
 	serverAddr := cfg.GetServerAddress()
@@ -70,19 +71,17 @@ func initDatabase(cfg *config.AppConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-func setupRouter(productController *controller.ProductController) *gin.Engine {
+func setupRouter(productController *controller.ProductController, cfg *config.AppConfig) *gin.Engine {
 	router := gin.Default()
 
-	// Health check endpoint
+	authMiddleware := auth.NewSharedAuthMiddleware(customLog.WithComponent(cfg.LogLevel, "AUTH-MIDDLEWARE"))
+
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "healthy"})
 	})
 
-	// API routes
-	// TODO - Add authentication middleware later and protect the some routes
 	api := router.Group("/api")
 	{
-
 		v1 := api.Group("/v1")
 		products := v1.Group("/products")
 		{
@@ -90,12 +89,27 @@ func setupRouter(productController *controller.ProductController) *gin.Engine {
 			products.GET("/:id", productController.GetProductByID())
 			products.GET("/:id/detail", productController.GetProductDetailByID())
 
-			// Protected routes (will add authentication middleware later)
-			products.POST("", productController.CreateProduct())
-			products.POST("/no-sku", productController.CreateProductWithoutSKU())
-			products.DELETE("/:id", productController.DeleteProductByID())
-		}
+			// Protected routes
+			// TODO - Implement this later
+			//products.GET(":userID/products",
+			//	authMiddleware.AuthRequired(),
+			//	productController.GetProductByUserID())
 
+			products.POST("",
+				authMiddleware.AuthRequired(),
+				authMiddleware.RequireAnyPermission("product.create"),
+				productController.CreateProduct())
+
+			products.POST("/no-sku",
+				authMiddleware.AuthRequired(),
+				authMiddleware.RequireAnyPermission("product.create"),
+				productController.CreateProductWithoutSKU())
+
+			products.DELETE("/:id",
+				authMiddleware.AuthRequired(),
+				authMiddleware.RequireAnyPermission("product.delete"),
+				productController.DeleteProductByID())
+		}
 	}
 
 	return router

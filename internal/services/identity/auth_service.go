@@ -6,6 +6,7 @@ import (
 )
 
 type AuthService interface {
-	Login(request request.AuthRequest) (response.AuthResponse, error)
+	Login(request request.AuthRequest) (*response.AuthResponse, error)
 	Logout(token string) error
+	Verify(token string) (*response.VerifyResponse, error)
 }

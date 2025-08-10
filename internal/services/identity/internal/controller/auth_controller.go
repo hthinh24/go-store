@@ -7,6 +7,7 @@ import (
 	"github.com/hthinh24/go-store/services/identity"
 	"github.com/hthinh24/go-store/services/identity/internal/dto/request"
 	"net/http"
+	"strings"
 )
 
 type AuthController struct {
@@ -40,5 +41,29 @@ func (a *AuthController) Login() func(ctx *gin.Context) {
 
 		a.logger.Info("Login successful for user:", AuthRequest.Email)
 		ctx.JSON(http.StatusOK, rest.NewAPIResponse(http.StatusOK, "Login successful", authResponse))
+	}
+}
+
+func (a *AuthController) Verify() func(ctx *gin.Context) {
+	return func(ctx *gin.Context) {
+		token := ctx.GetHeader("Authorization")
+		if token == "" {
+			a.logger.Error("Authorization header is missing")
+			ctx.JSON(http.StatusUnauthorized, rest.ErrorResponse{ApiError: rest.UnauthorizedError, Message: "Authorization header required"})
+			return
+		}
+
+		token = strings.TrimPrefix(token, "Bearer ")
+
+		a.logger.Info("Verifying token:", token)
+		verifyResponse, err := a.authService.Verify(token)
+		if err != nil {
+			a.logger.Error("Token verification failed:", err)
+			ctx.JSON(http.StatusUnauthorized, rest.ErrorResponse{ApiError: rest.UnauthorizedError, Message: "Invalid token"})
+			return
+		}
+
+		a.logger.Info("Token verified successfully for user:", verifyResponse.UserID)
+		ctx.JSON(http.StatusOK, verifyResponse)
 	}
 }

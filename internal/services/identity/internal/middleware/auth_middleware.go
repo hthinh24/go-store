@@ -5,16 +5,13 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/internal/pkg/rest"
-	"github.com/hthinh24/go-store/services/identity"
 	"net/http"
 	"strings"
 )
 
 type AuthMiddleware struct {
-	logger         logger.Logger
-	authService    identity.AuthService
-	authRepository identity.AuthRepository
-	jwtSecret      string
+	logger    logger.Logger
+	jwtSecret string
 }
 
 type JWTClaims struct {
@@ -25,11 +22,10 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-func NewAuthMiddleware(logger logger.Logger, authRepository identity.AuthRepository, jwtSecret string) *AuthMiddleware {
+func NewAuthMiddleware(logger logger.Logger, jwtSecret string) *AuthMiddleware {
 	return &AuthMiddleware{
-		logger:         logger,
-		authRepository: authRepository,
-		jwtSecret:      jwtSecret,
+		logger:    logger,
+		jwtSecret: jwtSecret,
 	}
 }
 
@@ -56,7 +52,7 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := m.validateToken(c, tokenString)
+		claims, err := m.ValidateToken(tokenString)
 		if err != nil {
 			m.logger.Error("Failed to validate JWT token", "error", err)
 			c.JSON(http.StatusUnauthorized, rest.ErrorResponse{
@@ -138,7 +134,7 @@ func (m *AuthMiddleware) RequireRole(role string) gin.HandlerFunc {
 	}
 }
 
-func (m *AuthMiddleware) validateToken(c *gin.Context, tokenString string) (*JWTClaims, error) {
+func (m *AuthMiddleware) ValidateToken(tokenString string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(m.jwtSecret), nil
 	})

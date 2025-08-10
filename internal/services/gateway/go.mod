@@ -1,11 +1,11 @@
-module github.com/hthinh24/go-store/internal/pkg
+module github.com/hthinh24/go-store/services/gateway
 
 go 1.24.3
 
 require (
 	github.com/gin-gonic/gin v1.10.1
-	github.com/golang-jwt/jwt/v4 v4.5.2
-	go.uber.org/zap v1.27.0
+	github.com/hthinh24/go-store/internal/pkg v0.0.0
+	github.com/joho/godotenv v1.4.0
 )
 
 require (
@@ -29,6 +29,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
@@ -37,3 +38,5 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/hthinh24/go-store/internal/pkg => ../../pkg

@@ -20,6 +20,10 @@ type AppConfig struct {
 	ServerPort string
 	ServerHost string
 
+	// JWT Configuration
+	JWTSecret string
+	JWTExpire string
+
 	UserServiceURL string
 
 	// Log Configuration
@@ -51,6 +55,9 @@ func LoadConfig(filename string) (*AppConfig, error) {
 		DBPassword: getEnv("DB_PASSWORD", ""),
 		DBName:     getEnv("DB_NAME", "go_store_identity"),
 		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
+
+		JWTSecret: getEnv("JWT_SECRET", ""),
+		JWTExpire: getEnv("JWT_EXPIRATION", "24h"),
 
 		ServerPort: getEnv("SERVER_PORT", "8081"),
 		ServerHost: getEnv("SERVER_HOST", "localhost"),
