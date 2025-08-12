@@ -391,7 +391,7 @@ func (p *productService) createProductDetailResponse(product *entity.Product) *r
 		optionValues = append(optionValues, p.createProductWithOptionValuesResponse(&option))
 	}
 
-	var productSKUResponses []*response.ProductSKUWithInventoryResponse
+	var productSKUResponses []*response.ProductSKUDetailResponse
 	for _, sku := range *productSKUWithInventories {
 		productSKUResponse := p.createProductSKUWithInventoryResponse(product.BasePrice, &sku)
 		productSKUResponses = append(productSKUResponses, productSKUResponse)
@@ -440,9 +440,9 @@ func (p *productService) createProductWithOptionValuesResponse(option *entity.Pr
 func (p *productService) createProductSKUWithInventoryResponse(
 	productPrice float64,
 	productSKUWithInventory *repository.ProductSKUDetail,
-) *response.ProductSKUWithInventoryResponse {
+) *response.ProductSKUDetailResponse {
 	productSKUPrice := p.calculateProductSKUPrice(productPrice, productSKUWithInventory.ExtraPrice)
-	return &response.ProductSKUWithInventoryResponse{
+	return &response.ProductSKUDetailResponse{
 		ID:            productSKUWithInventory.ID,
 		SKU:           productSKUWithInventory.SKU,
 		SKUSignature:  productSKUWithInventory.SKUSignature,

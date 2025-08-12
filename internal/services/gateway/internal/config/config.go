@@ -16,6 +16,7 @@ type GatewayConfig struct {
 	Port               string
 	IdentityServiceURL string
 	ProductServiceURL  string
+	CartServiceURL     string
 }
 
 func LoadConfig(fileName string) (*GatewayConfig, error) {
@@ -28,6 +29,7 @@ func LoadConfig(fileName string) (*GatewayConfig, error) {
 		Port:               getEnv("GATEWAY_PORT", "8080"),
 		IdentityServiceURL: getEnv("IDENTITY_SERVICE_URL", "http://localhost:8080"),
 		ProductServiceURL:  getEnv("PRODUCT_SERVICE_URL", "http://localhost:8081"),
+		CartServiceURL:     getEnv("CART_SERVICE_URL", "http://localhost:8082"),
 	}
 
 	return config, nil

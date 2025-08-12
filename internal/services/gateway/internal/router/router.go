@@ -131,6 +131,8 @@ func (g *Gateway) forwardToService(c *gin.Context, path string) {
 		targetURL = g.config.IdentityServiceURL + path
 	} else if strings.HasPrefix(path, "/"+config.ApiVersionV1+"/products") {
 		targetURL = g.config.ProductServiceURL + path
+	} else if strings.HasPrefix(path, "/"+config.ApiVersionV1+"/cart") {
+		targetURL = g.config.CartServiceURL + path
 	} else {
 		g.logger.Warn("No service found for path", " path: ", path)
 		c.JSON(http.StatusNotFound, gin.H{"error": "page not found"})

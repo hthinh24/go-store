@@ -38,7 +38,7 @@ type ProductDetailResponse struct {
 	UserID           int64                                  `json:"user_id"`
 	Version          int32                                  `json:"version"`
 	AttributeValues  *[]*ProductWithAttributeValuesResponse `json:"attribute_values"`
-	ProductSKUs      *[]*ProductSKUWithInventoryResponse    `json:"product_skus"`
+	ProductSKUs      *[]*ProductSKUDetailResponse           `json:"product_skus"`
 	OptionValues     *[]*ProductWithOptionValuesResponse    `json:"option_values"`
 }
 
