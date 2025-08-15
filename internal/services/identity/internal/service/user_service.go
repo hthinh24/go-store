@@ -85,13 +85,22 @@ func (u *userService) CreateUser(data *request.CreateUserRequest) (*response.Use
 		return nil, err
 	}
 
-	// Create a cart for the new user
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// Create a cart for the new user (only if cart client is properly configured)
+	if u.cartClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
-	if err := u.cartClient.CreateCart(ctx, user.ID); err != nil {
-		u.logger.Error("Error creating cart for user:", err)
-		return nil, err
+		if err := u.cartClient.CreateCart(ctx, user.ID); err != nil {
+			u.logger.Error("Error creating cart for user:", err)
+			// Don't fail user creation if cart creation fails - just log the error
+			u.logger.Warn("User created successfully but cart creation failed - user can create cart later")
+			// Rollback user creation if needed
+			u.userRepository.DeleteUser(user.ID)
+		} else {
+			u.logger.Info("Cart created successfully for user ID:", user.ID)
+		}
+	} else {
+		u.logger.Info("Cart client not configured - skipping cart creation for user ID:", user.ID)
 	}
 
 	u.logger.Info("Successfully created user with ID:", user.ID)

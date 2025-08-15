@@ -3,6 +3,7 @@ package internal
 import "github.com/hthinh24/go-store/services/cart/internal/entity"
 
 type CartRepository interface {
+	CreateCart(cart *entity.Cart) error
 	FindCartByUserID(userID int64) (*entity.Cart, error)
 	FindCartItemsByCartID(cartID int64) (*[]entity.CartItem, error)
 

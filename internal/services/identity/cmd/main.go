@@ -134,6 +134,7 @@ func setupRouter(authController *v1.AuthController, userController *v1.UserContr
 			users.PATCH("/:id/register-merchant",
 				userController.UpdateToMerchantAccount())
 			users.PATCH("/:id/password", userController.UpdateUserPassword())
+			users.DELETE("/:id", userController.DeleteUser())
 
 			// Admin only routes
 			users.GET("", authMiddleware.RequireRole("admin"), userController.GetUsers())

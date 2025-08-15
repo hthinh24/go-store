@@ -24,6 +24,25 @@ func NewCartController(logger logger.Logger, cartService internal.CartService) *
 	}
 }
 
+func (c *CartController) CreateCart() func(c *gin.Context) {
+	return func(ctx *gin.Context) {
+		var createCartRequest request.CreateCartRequest
+		if err := ctx.ShouldBindJSON(&createCartRequest); err != nil {
+			c.logger.Error("Invalid create cart request", "error", err)
+			ctx.JSON(http.StatusBadRequest, rest.NewErrorResponse(rest.BadRequestError, "Invalid input"))
+			return
+		}
+
+		cart, err := c.cartService.CreateCart(&createCartRequest)
+		if err != nil {
+			c.handleCartError(ctx, err)
+			return
+		}
+
+		ctx.JSON(http.StatusCreated, rest.NewAPIResponse(http.StatusCreated, "Cart created successfully", cart))
+	}
+}
+
 func (c *CartController) GetCartItemsByUserID() func(c *gin.Context) {
 	return func(ctx *gin.Context) {
 		userID, err := c.getUserIDFromContext(ctx)
@@ -32,7 +51,7 @@ func (c *CartController) GetCartItemsByUserID() func(c *gin.Context) {
 			return
 		}
 
-		cartItems, err := c.cartService.FindCartItemsByCartID(userID)
+		cartItems, err := c.cartService.GetCartItemsByCartID(userID)
 		if err != nil {
 			c.handleCartError(ctx, err)
 			return

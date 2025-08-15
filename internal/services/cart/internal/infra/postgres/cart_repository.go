@@ -20,6 +20,18 @@ func NewCartRepository(logger logger.Logger, db *gorm.DB) *CartRepository {
 	}
 }
 
+func (c *CartRepository) CreateCart(cart *entity.Cart) error {
+	c.logger.Info("Creating cart", "userID", cart.UserID)
+
+	if err := c.db.Create(cart).Error; err != nil {
+		c.logger.Error("Failed to create cart", "userID", cart.UserID, "error", err)
+		return err
+	}
+
+	c.logger.Info("Successfully created cart", "cartID", cart.ID, "userID", cart.UserID)
+	return nil
+}
+
 func (c *CartRepository) FindCartByUserID(userID int64) (*entity.Cart, error) {
 	c.logger.Info("Getting cart by user ID", "userID", userID)
 

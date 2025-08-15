@@ -41,8 +41,12 @@ var publicEndpoints = map[string][]string{
 	"/api/v1/auth/login":    {"POST"},
 	"/api/v1/auth/register": {"POST"},
 	"/api/v1/auth/refresh":  {"POST"},
-	"/api/v1/products/:id":  {"GET"}, // Public product details
-	"/api/v1/products":      {"GET"},
+
+	"/api/v1/users":         {"POST"}, // Public user list
+	"/api/v1/cart/register": {"POST"}, // Public user list
+
+	"/api/v1/products/:id": {"GET"}, // Public product details
+	"/api/v1/products":     {"GET"},
 }
 
 func (g *Gateway) handleRequest(c *gin.Context) {

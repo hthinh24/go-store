@@ -69,12 +69,16 @@ func setupRouter(cartController *controller.CartController, cfg *config.AppConfi
 		v1 := api.Group("/v1")
 		cart := v1.Group("/cart")
 
+		// Public endpoints
+		cart.POST("/register", cartController.CreateCart())
+
 		// Apply authentication middleware to cart routes
 		cart.Use(authMiddleware.AuthRequired())
 		{
 			cart.GET("", cartController.GetCartItemsByUserID())
-			cart.POST("", cartController.AddItemToCart())
-			cart.PUT("", cartController.UpdateItemQuantity())
+
+			cart.POST("/items", cartController.AddItemToCart())
+			cart.PUT("/items", cartController.UpdateItemQuantity())
 			cart.DELETE("/:item_id", cartController.RemoveItemFromCart())
 		}
 	}

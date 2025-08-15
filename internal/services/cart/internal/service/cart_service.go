@@ -27,7 +27,31 @@ func NewCartService(logger logger.Logger, cartRepository internal.CartRepository
 	}
 }
 
-func (c *cartService) FindCartItemsByCartID(cartID int64) (*[]response.CartItemResponse, error) {
+func (c *cartService) CreateCart(data *request.CreateCartRequest) (*response.CartResponse, error) {
+	c.logger.Info("Creating cart for user ID", "userID", data.UserID)
+
+	// Check if cart already exists for this user
+	existingCart, err := c.cartRepository.FindCartByUserID(data.UserID)
+	if err == nil && existingCart != nil {
+		c.logger.Info("Cart already exists for user", "userID", data.UserID, "cartID", existingCart.ID)
+		// Return existing cart with empty items
+		return c.createCartResponse(existingCart, &[]response.CartItemResponse{}), nil
+	}
+
+	// Create cart entity in service layer
+	cart := c.createCartEntity(data.UserID)
+
+	// Pass entity to repository for persistence
+	if err := c.cartRepository.CreateCart(cart); err != nil {
+		c.logger.Error("Failed to create cart for user", "userID", data.UserID, "error", err)
+		return nil, err
+	}
+
+	c.logger.Info("Successfully created cart", "userID", data.UserID, "cartID", cart.ID)
+	return c.createCartResponse(cart, &[]response.CartItemResponse{}), nil
+}
+
+func (c *cartService) GetCartItemsByCartID(cartID int64) (*[]response.CartItemResponse, error) {
 	items, err := c.cartRepository.FindCartItemsByCartID(cartID)
 	if err != nil {
 		c.logger.Error("Failed to find cart items by cart ID, ", "cartID: ", cartID, "error", err)
@@ -56,7 +80,7 @@ func (c *cartService) GetCartByUserID(userID int64) (*response.CartResponse, err
 		return nil, err
 	}
 
-	cartItemsResponse, err := c.FindCartItemsByCartID(cart.ID)
+	cartItemsResponse, err := c.GetCartItemsByCartID(cart.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +164,13 @@ func (c *cartService) RemoveItemFromCart(userID int64, itemID int64) error {
 	}
 
 	return nil
+}
+
+func (c *cartService) createCartEntity(userID int64) *entity.Cart {
+	return &entity.Cart{
+		UserID: userID,
+		Status: constants.CartStatusActive,
+	}
 }
 
 func (c *cartService) createCartItemEntity(cartID int64, productSKUResponse *product.ProductSKUDetailResponse,
