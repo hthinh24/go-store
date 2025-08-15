@@ -1,6 +1,10 @@
 package service
 
 import (
+	"context"
+	"github.com/hthinh24/go-store/services/identity/internal/controller/http/client"
+	"time"
+
 	log "github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/identity"
 	"github.com/hthinh24/go-store/services/identity/internal/constants"
@@ -15,15 +19,18 @@ type userService struct {
 	logger         log.Logger
 	userRepository identity.UserRepository
 	authRepository identity.AuthRepository
+	cartClient     client.CartClient
 }
 
 func NewUserService(logger log.Logger,
 	userRepository identity.UserRepository,
-	authRepository identity.AuthRepository) identity.UserService {
+	authRepository identity.AuthRepository,
+	cartClient client.CartClient) identity.UserService {
 	return &userService{
 		logger:         logger,
 		userRepository: userRepository,
 		authRepository: authRepository,
+		cartClient:     cartClient,
 	}
 }
 
@@ -75,6 +82,15 @@ func (u *userService) CreateUser(data *request.CreateUserRequest) (*response.Use
 
 	if err := u.setUserRoleToUser(user); err != nil {
 		u.logger.Error("Error setting user role:", err)
+		return nil, err
+	}
+
+	// Create a cart for the new user
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := u.cartClient.CreateCart(ctx, user.ID); err != nil {
+		u.logger.Error("Error creating cart for user:", err)
 		return nil, err
 	}
 

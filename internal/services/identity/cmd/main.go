@@ -5,7 +5,8 @@ import (
 	"github.com/hthinh24/go-store/services/identity"
 	"github.com/hthinh24/go-store/services/identity/internal/config"
 	"github.com/hthinh24/go-store/services/identity/internal/constants"
-	"github.com/hthinh24/go-store/services/identity/internal/controller"
+	"github.com/hthinh24/go-store/services/identity/internal/controller/http/client"
+	"github.com/hthinh24/go-store/services/identity/internal/controller/http/v1"
 	"github.com/hthinh24/go-store/services/identity/internal/entity"
 	customErr "github.com/hthinh24/go-store/services/identity/internal/errors"
 	"github.com/hthinh24/go-store/services/identity/internal/middleware"
@@ -45,16 +46,26 @@ func main() {
 	userRepo := repository.NewUserRepository(logger.WithComponent(cfg.LogLevel, "USER-REPOSITORY"), db)
 	authRepo := repository.NewAuthRepository(logger.WithComponent(cfg.LogLevel, "AUTH-REPOSITORY"), db)
 
+	// Initialize external service clients
+	var cartClient client.CartClient
+	if cfg.CartServiceURL != "" {
+		cartClient = client.NewCartClient(cfg.CartServiceURL)
+		appLogger.Info("Cart service client initialized with URL: %s", cfg.CartServiceURL)
+	} else {
+		appLogger.Warn("Cart service URL not configured, cart creation will be skipped")
+		cartClient = client.NewCartClient("") // This will effectively disable cart creation
+	}
+
 	// Initialize services
 	authService := service.NewAuthService(logger.WithComponent(cfg.LogLevel, "AUTH-SERVICE"), userRepo, authRepo, cfg)
-	userService := service.NewUserService(logger.WithComponent(cfg.LogLevel, "USER-SERVICE"), userRepo, authRepo)
+	userService := service.NewUserService(logger.WithComponent(cfg.LogLevel, "USER-SERVICE"), userRepo, authRepo, cartClient)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(logger.WithComponent(cfg.LogLevel, "AUTH-MIDDLEWARE"), cfg.JWTSecret)
 
 	// Initialize controllers
-	authController := controller.NewAuthController(logger.WithComponent(cfg.LogLevel, "AUTH-CONTROLLER"), authService)
-	userController := controller.NewUserController(logger.WithComponent(cfg.LogLevel, "USER-CONTROLLER"), userService)
+	authController := v1.NewAuthController(logger.WithComponent(cfg.LogLevel, "AUTH-CONTROLLER"), authService)
+	userController := v1.NewUserController(logger.WithComponent(cfg.LogLevel, "USER-CONTROLLER"), userService)
 
 	// Setup router
 	router := setupRouter(authController, userController, authMiddleware)
@@ -85,7 +96,7 @@ func initDatabase(cfg *config.AppConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-func setupRouter(authController *controller.AuthController, userController *controller.UserController, authMiddleware *middleware.AuthMiddleware) *gin.Engine {
+func setupRouter(authController *v1.AuthController, userController *v1.UserController, authMiddleware *middleware.AuthMiddleware) *gin.Engine {
 	router := gin.Default()
 
 	// Health check endpoint

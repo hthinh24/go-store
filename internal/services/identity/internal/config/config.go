@@ -34,6 +34,9 @@ type AppConfig struct {
 	RedisPort     string
 	RedisPassword string
 
+	// External Services
+	CartServiceURL string
+
 	// Environment
 	Environment string
 }
@@ -68,6 +71,8 @@ func LoadConfig(filename string) (*AppConfig, error) {
 		RedisHost:     getEnv("REDIS_HOST", "localhost"),
 		RedisPort:     getEnv("REDIS_PORT", "6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
+
+		CartServiceURL: getEnv("CART_SERVICE_URL", ""),
 
 		Environment: getEnv("ENV", "development"),
 	}
