@@ -6,6 +6,11 @@ import (
 )
 
 type ProductRepository interface {
+	// Transaction methods
+	WithTransaction() (ProductRepository, error)
+	Commit() error
+	Rollback() error
+
 	FindProductByID(id int64) (*entity.Product, error)
 	FindProductAttributesInfoByProductID(productID int64) (*[]entity.ProductAttributeInfo, error)
 	FindProductOptionsInfoByProductID(productID int64) (*[]entity.ProductOptionInfo, error)

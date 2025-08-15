@@ -4,9 +4,10 @@ import (
 	"strings"
 
 	"github.com/hthinh24/go-store/internal/pkg/logger"
+	"github.com/hthinh24/go-store/services/product"
 	"github.com/hthinh24/go-store/services/product/internal/dto/repository"
 	"github.com/hthinh24/go-store/services/product/internal/entity"
-	"github.com/hthinh24/go-store/services/product/internal/errors"
+	productErrors "github.com/hthinh24/go-store/services/product/internal/errors"
 	"gorm.io/gorm"
 )
 
@@ -22,12 +23,52 @@ func NewProductRepository(logger logger.Logger, db *gorm.DB) *productRepository 
 	}
 }
 
+// Transaction methods
+func (p *productRepository) WithTransaction() (product.ProductRepository, error) {
+	p.logger.Info("Creating transactional repository")
+
+	tx := p.db.Begin()
+	if tx.Error != nil {
+		p.logger.Error("Failed to begin transaction:", tx.Error)
+		return nil, tx.Error
+	}
+
+	return &productRepository{
+		logger: p.logger,
+		db:     tx,
+	}, nil
+}
+
+func (p *productRepository) Commit() error {
+	p.logger.Info("Committing transaction")
+
+	if err := p.db.Commit().Error; err != nil {
+		p.logger.Error("Failed to commit transaction:", err)
+		return err
+	}
+
+	p.logger.Info("Transaction committed successfully")
+	return nil
+}
+
+func (p *productRepository) Rollback() error {
+	p.logger.Info("Rolling back transaction")
+
+	if err := p.db.Rollback().Error; err != nil {
+		p.logger.Error("Failed to rollback transaction:", err)
+		return err
+	}
+
+	p.logger.Info("Transaction rolled back successfully")
+	return nil
+}
+
 func (p *productRepository) FindProductByID(id int64) (*entity.Product, error) {
 	p.logger.Info("Finding product by ID:", id)
 
 	var product entity.Product
 	if err := p.db.Where("id = ?", id).First(&product).Error; err != nil {
-		return nil, errors.ErrProductNotFound{}
+		return nil, productErrors.ErrProductNotFound{}
 	}
 
 	return &product, nil
@@ -114,39 +155,39 @@ func (p *productRepository) CreateProduct(product *entity.Product) error {
 
 		// Check for duplicate slug constraint
 		if strings.Contains(errMsg, "duplicate") && strings.Contains(errMsg, "slug") {
-			return errors.ErrProductAlreadyExists{Slug: product.Slug}
+			return productErrors.ErrProductAlreadyExists{Slug: product.Slug}
 		}
 
 		// Check for duplicate name constraint
 		if strings.Contains(errMsg, "duplicate") && strings.Contains(errMsg, "name") {
-			return errors.ErrProductAlreadyExists{Name: product.Name}
+			return productErrors.ErrProductAlreadyExists{Name: product.Name}
 		}
 
 		// Check for foreign key violations
 		if strings.Contains(errMsg, "foreign key") {
 			if strings.Contains(errMsg, "category") {
-				return errors.ErrCategoryNotFound{ID: product.CategoryID}
+				return productErrors.ErrCategoryNotFound{ID: product.CategoryID}
 			}
 			if strings.Contains(errMsg, "brand") {
-				return errors.ErrBrandNotFound{ID: product.BrandID}
+				return productErrors.ErrBrandNotFound{ID: product.BrandID}
 			}
 			if strings.Contains(errMsg, "user") {
-				return errors.ErrUserNotFound{ID: product.UserID}
+				return productErrors.ErrUserNotFound{ID: product.UserID}
 			}
 		}
 
 		// Check for check constraint violations
 		if strings.Contains(errMsg, "check") || strings.Contains(errMsg, "constraint") {
 			if strings.Contains(errMsg, "price") {
-				return errors.ErrInvalidProductData{Field: "price", Message: "price must be greater than 0"}
+				return productErrors.ErrInvalidProductData{Field: "price", Message: "price must be greater than 0"}
 			}
 			if strings.Contains(errMsg, "status") {
-				return errors.ErrInvalidProductData{Field: "status", Message: "invalid status value"}
+				return productErrors.ErrInvalidProductData{Field: "status", Message: "invalid status value"}
 			}
 		}
 
 		// Generic database transaction error
-		return errors.ErrDatabaseTransaction{Operation: "create product"}
+		return productErrors.ErrDatabaseTransaction{Operation: "create product"}
 	}
 
 	p.logger.Info("Product created successfully:", product.ID)
@@ -164,11 +205,11 @@ func (p *productRepository) CreateProductAttributeInfo(productAttributeInfos *[]
 		// Check for foreign key violations
 		if strings.Contains(errMsg, "foreign key") {
 			if strings.Contains(errMsg, "product_attribute") {
-				return errors.ErrAttributeNotFound{ID: 0} // We'd need to parse which specific ID failed
+				return productErrors.ErrAttributeNotFound{ID: 0} // We'd need to parse which specific ID failed
 			}
 		}
 
-		return errors.ErrDatabaseTransaction{Operation: "create product attribute info"}
+		return productErrors.ErrDatabaseTransaction{Operation: "create product attribute info"}
 	}
 
 	p.logger.Info("Product attribute infos created successfully")
@@ -186,11 +227,11 @@ func (p *productRepository) CreateProductOptionInfo(productOptionInfos *[]entity
 		// Check for foreign key violations
 		if strings.Contains(errMsg, "foreign key") {
 			if strings.Contains(errMsg, "product_option") {
-				return errors.ErrOptionNotFound{ID: 0} // We'd need to parse which specific ID failed
+				return productErrors.ErrOptionNotFound{ID: 0} // We'd need to parse which specific ID failed
 			}
 		}
 
-		return errors.ErrDatabaseTransaction{Operation: "create product option info"}
+		return productErrors.ErrDatabaseTransaction{Operation: "create product option info"}
 	}
 
 	p.logger.Info("Product option infos created successfully")
@@ -235,17 +276,17 @@ func (p *productRepository) CreateProductSKUs(productSKUs *[]entity.ProductSKU) 
 		if strings.Contains(errMsg, "duplicate") && strings.Contains(errMsg, "sku") {
 			// Extract SKU from productSKUs if possible
 			if len(*productSKUs) > 0 {
-				return errors.ErrSKUAlreadyExists{SKU: (*productSKUs)[0].SKU}
+				return productErrors.ErrSKUAlreadyExists{SKU: (*productSKUs)[0].SKU}
 			}
-			return errors.ErrSKUAlreadyExists{SKU: "unknown"}
+			return productErrors.ErrSKUAlreadyExists{SKU: "unknown"}
 		}
 
 		// Check for invalid price
 		if strings.Contains(errMsg, "check") && strings.Contains(errMsg, "price") {
-			return errors.ErrInvalidSKUData{SKU: "unknown", Message: "price must be greater than or equal to 0"}
+			return productErrors.ErrInvalidSKUData{SKU: "unknown", Message: "price must be greater than or equal to 0"}
 		}
 
-		return errors.ErrDatabaseTransaction{Operation: "create product SKUs"}
+		return productErrors.ErrDatabaseTransaction{Operation: "create product SKUs"}
 	}
 
 	p.logger.Info("Product SKUs created successfully")

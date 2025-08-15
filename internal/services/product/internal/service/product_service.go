@@ -54,33 +54,66 @@ func (p *productService) CreateProduct(data *request.CreateProductRequest) (*res
 	// Create Product Entity from request data
 	productEntity := p.createProductEntity(data)
 
+	// Create transactional repository
+	txRepo, err := p.productRepository.WithTransaction()
+	if err != nil {
+		p.logger.Error("Failed to create transaction:", err)
+		return nil, err
+	}
+
+	// Ensure rollback on error or panic
+	defer func() {
+		if r := recover(); r != nil {
+			txRepo.Rollback()
+			panic(r)
+		}
+	}()
+
 	// 1. Create & Insert the base product entity
-	if err := p.processCreateProduct(productEntity); err != nil {
+	if err := txRepo.CreateProduct(productEntity); err != nil {
+		p.logger.Error("Error creating product:", err)
+		txRepo.Rollback()
 		return nil, err
 	}
 
 	// 2. Create & Insert product attribute info
-	if err := p.processCreateProductAttributeInfo(productEntity.ID, data.ProductAttributes); err != nil {
+	if err := p.processCreateProductAttributeInfoWithTx(txRepo, productEntity.ID, data.ProductAttributes); err != nil {
+		p.logger.Error("Error creating product attribute info:", err)
+		txRepo.Rollback()
 		return nil, err
 	}
 
 	// 3. Create & Insert product option info
-	if err := p.processCreateProductOptionInfo(productEntity.ID, data.OptionValues); err != nil {
+	if err := p.processCreateProductOptionInfoWithTx(txRepo, productEntity.ID, data.OptionValues); err != nil {
+		p.logger.Error("Error creating product option info:", err)
+		txRepo.Rollback()
 		return nil, err
 	}
 
 	// 4. Create & Insert product attribute values
-	if err := p.processCreateProductAttributes(data.ProductAttributes); err != nil {
+	if err := p.processCreateProductAttributesWithTx(txRepo, data.ProductAttributes); err != nil {
+		p.logger.Error("Error creating product attributes:", err)
+		txRepo.Rollback()
 		return nil, err
 	}
 
 	// 5. Create & Insert product SKUs
-	if err := p.processCreateProductSKUs(productEntity.ID, productEntity.Name, &data.ProductSKUs); err != nil {
+	if err := p.processCreateProductSKUsWithTx(txRepo, productEntity.ID, productEntity.Name, &data.ProductSKUs); err != nil {
+		p.logger.Error("Error creating product SKUs:", err)
+		txRepo.Rollback()
 		return nil, err
 	}
 
 	// 6. Create & Insert product option combinations
-	if err := p.processCreateProductOptionCombinations(productEntity.ID, data.OptionValues); err != nil {
+	if err := p.processCreateProductOptionCombinationsWithTx(txRepo, productEntity.ID, data.OptionValues); err != nil {
+		p.logger.Error("Error creating product option combinations:", err)
+		txRepo.Rollback()
+		return nil, err
+	}
+
+	// Commit the transaction
+	if err := txRepo.Commit(); err != nil {
+		p.logger.Error("Failed to commit transaction:", err)
 		return nil, err
 	}
 
@@ -93,7 +126,6 @@ func (p *productService) DeleteProduct(id int64) error {
 
 	err := p.productRepository.DeleteProduct(id)
 	if err != nil {
-		p.logger.Error("Error deleting product", err)
 		return err
 	}
 
@@ -101,24 +133,16 @@ func (p *productService) DeleteProduct(id int64) error {
 	return nil
 }
 
-func (p *productService) processCreateProduct(product *entity.Product) error {
-	if err := p.productRepository.CreateProduct(product); err != nil {
-		p.logger.Error("Error saving product to repository, error: ", err)
-		return err
-	}
-
-	return nil
-}
-
-func (p *productService) processCreateProductAttributeInfo(productID int64, attributeMap map[int64][]string) error {
+func (p *productService) processCreateProductAttributeInfoWithTx(txRepo product.ProductRepository, productID int64, attributeMap map[int64][]string) error {
 	var attributeIDs []int64
 	var productAttributeInfoEntities []entity.ProductAttributeInfo
+
 	for attributeID, _ := range attributeMap {
 		attributeIDs = append(attributeIDs, attributeID)
 	}
 
 	// 1. Find product attributes by IDs
-	productAttributes, err := p.productRepository.FindProductAttributesByIDs(attributeIDs)
+	productAttributes, err := txRepo.FindProductAttributesByIDs(attributeIDs)
 	if err != nil {
 		p.logger.Error("Error finding product attributes by IDs, error: ", err)
 		return err
@@ -135,7 +159,7 @@ func (p *productService) processCreateProductAttributeInfo(productID int64, attr
 	}
 
 	// 3. Save product attribute info entities to the repository
-	if err := p.productRepository.CreateProductAttributeInfo(&productAttributeInfoEntities); err != nil {
+	if err := txRepo.CreateProductAttributeInfo(&productAttributeInfoEntities); err != nil {
 		p.logger.Error("Error saving product attribute info to repository, error: ", err)
 		return err
 	}
@@ -143,7 +167,7 @@ func (p *productService) processCreateProductAttributeInfo(productID int64, attr
 	return nil
 }
 
-func (p *productService) processCreateProductOptionInfo(productID int64, optionMap map[int64][]string) error {
+func (p *productService) processCreateProductOptionInfoWithTx(txRepo product.ProductRepository, productID int64, optionMap map[int64][]string) error {
 	var productOptionIDs []int64
 	var productOptionInfoEntities []entity.ProductOptionInfo
 
@@ -152,7 +176,7 @@ func (p *productService) processCreateProductOptionInfo(productID int64, optionM
 	}
 
 	// 1. Find product options by IDs
-	productOptions, err := p.productRepository.FindProductOptionsByIDs(productOptionIDs)
+	productOptions, err := txRepo.FindProductOptionsByIDs(productOptionIDs)
 	if err != nil {
 		p.logger.Error("Error finding product options by IDs, error: ", err)
 		return err
@@ -169,7 +193,7 @@ func (p *productService) processCreateProductOptionInfo(productID int64, optionM
 	}
 
 	// 3. Save product option info entities to the repository
-	if err := p.productRepository.CreateProductOptionInfo(&productOptionInfoEntities); err != nil {
+	if err := txRepo.CreateProductOptionInfo(&productOptionInfoEntities); err != nil {
 		p.logger.Error("Error saving product option info to repository, error: ", err)
 		return err
 	}
@@ -177,7 +201,7 @@ func (p *productService) processCreateProductOptionInfo(productID int64, optionM
 	return nil
 }
 
-func (p *productService) processCreateProductAttributes(attributeValues map[int64][]string) error {
+func (p *productService) processCreateProductAttributesWithTx(txRepo product.ProductRepository, attributeValues map[int64][]string) error {
 	// 1. Create product attribute values entities from the attribute values map
 	var productAttributeValueEntities []entity.ProductAttributeValue
 	for attributeID, values := range attributeValues {
@@ -188,7 +212,7 @@ func (p *productService) processCreateProductAttributes(attributeValues map[int6
 	}
 
 	// 2. Save product attribute values to the repository
-	err := p.productRepository.CreateProductAttributeValuesIfNotExist(&productAttributeValueEntities)
+	err := txRepo.CreateProductAttributeValuesIfNotExist(&productAttributeValueEntities)
 	if err != nil {
 		return err
 	}
@@ -196,9 +220,7 @@ func (p *productService) processCreateProductAttributes(attributeValues map[int6
 	return nil
 }
 
-func (p *productService) processCreateProductSKUs(productID int64,
-	productName string,
-	productSKUData *[]request.CreateProductSKURequest) error {
+func (p *productService) processCreateProductSKUsWithTx(txRepo product.ProductRepository, productID int64, productName string, productSKUData *[]request.CreateProductSKURequest) error {
 	// 1. Create product SKU entities from the product SKU data
 	var productSKUEntities []entity.ProductSKU
 	for _, sku := range *productSKUData {
@@ -207,7 +229,7 @@ func (p *productService) processCreateProductSKUs(productID int64,
 	}
 
 	// 2. Save product SKUs to the repository
-	if err := p.productRepository.CreateProductSKUs(&productSKUEntities); err != nil {
+	if err := txRepo.CreateProductSKUs(&productSKUEntities); err != nil {
 		p.logger.Error("Error saving product SKUs to repository, error: ", err)
 		return err
 	}
@@ -220,7 +242,7 @@ func (p *productService) processCreateProductSKUs(productID int64,
 	}
 
 	// 4. Save product inventory entities to repository
-	if err := p.productRepository.CreateProductInventories(&productInventoryEntities); err != nil {
+	if err := txRepo.CreateProductInventories(&productInventoryEntities); err != nil {
 		p.logger.Error("Error saving product inventory to repository, error: ", err)
 		return err
 	}
@@ -228,7 +250,7 @@ func (p *productService) processCreateProductSKUs(productID int64,
 	return nil
 }
 
-func (p *productService) processCreateProductOptionCombinations(id int64, optionValues map[int64][]string) error {
+func (p *productService) processCreateProductOptionCombinationsWithTx(txRepo product.ProductRepository, id int64, optionValues map[int64][]string) error {
 	var productOptionCombinationEntities []entity.ProductOptionCombination
 
 	// 1. Create product option combination entities from the option values map
@@ -238,8 +260,9 @@ func (p *productService) processCreateProductOptionCombinations(id int64, option
 		productOptionCombinationEntities = append(productOptionCombinationEntities, *productOptionCombinationEntity)
 		displayOrder++
 	}
+
 	// 2. Save product option combinations to the repository
-	if err := p.productRepository.CreateProductOptionCombinations(&productOptionCombinationEntities); err != nil {
+	if err := txRepo.CreateProductOptionCombinations(&productOptionCombinationEntities); err != nil {
 		p.logger.Error("Error saving product option combinations to repository, error: ", err)
 		return err
 	}
@@ -254,7 +277,7 @@ func (p *productService) processCreateProductOptionCombinations(id int64, option
 	}
 
 	// 4. Create product option values in the repository if they do not already exist
-	if err := p.productRepository.CreateProductOptionValuesIfNotExist(&productOptionValueEntities); err != nil {
+	if err := txRepo.CreateProductOptionValuesIfNotExist(&productOptionValueEntities); err != nil {
 		p.logger.Error("Error saving product option values to repository, error: ", err)
 		return err
 	}
