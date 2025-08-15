@@ -67,6 +67,27 @@ func (pc *ProductController) GetProductDetailByID() gin.HandlerFunc {
 	}
 }
 
+func (pc *ProductController) GetProductSKUByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idParam := c.Param("id")
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			pc.logger.Error("Invalid SKU ID: %v", err)
+			response := rest.NewErrorResponse(rest.BadRequestError, "Invalid SKU ID")
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		productSKU, err := pc.productService.GetProductSKUByID(id)
+		if err != nil {
+			pc.ErrorHandler(c, err, "Failed to get product SKU")
+			return
+		}
+
+		c.JSON(http.StatusOK, productSKU)
+	}
+}
+
 func (pc *ProductController) CreateProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req request.CreateProductRequest

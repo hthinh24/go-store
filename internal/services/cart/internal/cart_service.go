@@ -7,7 +7,7 @@ import (
 
 type CartService interface {
 	CreateCart(data *request.CreateCartRequest) (*response.CartResponse, error)
-	GetCartItemsByCartID(userID int64) (*[]response.CartItemResponse, error)
+	GetCartItemsByCartID(cartID int64) (*[]response.CartItemResponse, error)
 	GetCartByUserID(userID int64) (*response.CartResponse, error)
 	AddItemToCart(userID int64, item *request.AddItemRequest) error
 	UpdateItemQuantity(userID int64, itemID int64, quantity int) error

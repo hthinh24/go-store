@@ -49,15 +49,15 @@ func (c *CartRepository) FindCartByUserID(userID int64) (*entity.Cart, error) {
 }
 
 func (c *CartRepository) FindCartItemsByCartID(cartID int64) (*[]entity.CartItem, error) {
-	c.logger.Info("Finding cart items by cart ID", "cartID", cartID)
+	c.logger.Info("Finding cart items by cart ID, ", "cartID: ", cartID)
 
 	var items []entity.CartItem
 	if err := c.db.Where("cart_id = ?", cartID).Find(&items).Error; err != nil {
-		c.logger.Error("Failed to find cart items", "cartID", cartID, "error", err)
+		c.logger.Error("Failed to find cart items", "userID", cartID, "error", err)
 		return nil, err
 	}
 	if len(items) == 0 {
-		c.logger.Info("No items found for cart ID", "cartID", cartID)
+		c.logger.Info("No items found for cart ID", "userID", cartID)
 		return nil, nil
 	}
 

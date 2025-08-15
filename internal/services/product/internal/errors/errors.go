@@ -9,6 +9,12 @@ func (e ErrProductNotFound) Error() string {
 	return "Product not found"
 }
 
+type ErrProductSKUNotFound struct{}
+
+func (e ErrProductSKUNotFound) Error() string {
+	return "Product SKU not found"
+}
+
 type ErrProductAlreadyExists struct {
 	Name string
 	Slug string

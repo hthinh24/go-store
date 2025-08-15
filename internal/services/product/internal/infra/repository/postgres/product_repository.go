@@ -106,8 +106,9 @@ func (p *productRepository) FindProductSKUsByProductID(id int64) (*[]repository.
 	var productSKUsWithInventory []repository.ProductSKUDetail
 	if err := p.db.
 		Table(entity.ProductSKU{}.TableName()+" AS ps").
-		Select("ps.id, ps.sku, ps.sku_signature, ps.extra_price,"+
-			"ps.sale_type", "ps.sale_value", "ps.sale_start_date", "ps.sale_end_date").
+		Select("ps.id, ps.sku, ps.sku_signature, ps.extra_price, "+
+			"ps.sale_type, ps.sale_value, ps.sale_start_date, "+
+			"ps.sale_end_date, ps.status, ps.product_id, pi.available_stock as stock").
 		Joins("JOIN product_inventory AS pi ON ps.id = pi.product_sku_id").
 		Where("ps.product_id = ?", id).
 		Find(&productSKUsWithInventory).Error; err != nil {
@@ -116,6 +117,30 @@ func (p *productRepository) FindProductSKUsByProductID(id int64) (*[]repository.
 	}
 
 	return &productSKUsWithInventory, nil
+}
+
+func (p *productRepository) FindProductSKUByID(skuID int64) (*repository.ProductSKUDetail, error) {
+	p.logger.Info("Finding product SKU by ID:", skuID)
+
+	var productSKU repository.ProductSKUDetail
+	if err := p.db.
+		Table(entity.ProductSKU{}.TableName()+" AS ps").
+		Select("ps.id, ps.sku, ps.sku_signature, ps.extra_price, "+
+			"ps.sale_type, ps.sale_value, ps.sale_start_date, "+
+			"ps.sale_end_date, ps.status, ps.product_id, pi.available_stock as stock").
+		Joins("JOIN product_inventory AS pi ON ps.id = pi.product_sku_id").
+		Where("ps.id = ?", skuID).
+		First(&productSKU).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			p.logger.Error("Product SKU not found with ID:", skuID)
+			return nil, productErrors.ErrProductSKUNotFound{}
+		}
+		p.logger.Error("Failed to find product SKU by ID:", skuID, "Error:", err)
+		return nil, err
+	}
+
+	p.logger.Info("Found product SKU with ID:", productSKU.ID, "SKU:", productSKU.SKU, "Status:", productSKU.Status)
+	return &productSKU, nil
 }
 
 func (p *productRepository) FindProductAttributesByIDs(productAttributeIDs []int64) (*[]entity.ProductAttribute, error) {

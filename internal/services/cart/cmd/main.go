@@ -2,12 +2,13 @@ package main
 
 import (
 	"github.com/hthinh24/go-store/internal/pkg/middleware/auth"
+	"github.com/hthinh24/go-store/services/cart/internal/controller/http"
+	"github.com/hthinh24/go-store/services/cart/internal/controller/http/client"
 	"log"
 
 	"github.com/gin-gonic/gin"
 	customLog "github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/cart/internal/config"
-	"github.com/hthinh24/go-store/services/cart/internal/controller"
 	repository "github.com/hthinh24/go-store/services/cart/internal/infra/postgres"
 	"github.com/hthinh24/go-store/services/cart/internal/service"
 	"gorm.io/driver/postgres"
@@ -32,9 +33,13 @@ func main() {
 	}
 	appLogger.Info("Database connected successfully")
 
+	productClient := client.NewProductClient(cfg.ProductServiceURL)
+
 	cartRepository := repository.NewCartRepository(customLog.WithComponent(cfg.LogLevel, "CART-REPOSITORY"), db)
-	cartService := service.NewCartService(customLog.WithComponent(cfg.LogLevel, "CART-SERVICE"), cartRepository)
-	cartController := controller.NewCartController(customLog.WithComponent(cfg.LogLevel, "CART-CONTROLLER"), cartService)
+	cartService := service.NewCartService(customLog.WithComponent(cfg.LogLevel, "CART-SERVICE"),
+		cartRepository,
+		productClient)
+	cartController := http.NewCartController(customLog.WithComponent(cfg.LogLevel, "CART-CONTROLLER"), cartService)
 
 	router := setupRouter(cartController, cfg)
 
@@ -55,7 +60,7 @@ func initDatabase(cfg *config.AppConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-func setupRouter(cartController *controller.CartController, cfg *config.AppConfig) *gin.Engine {
+func setupRouter(cartController *http.CartController, cfg *config.AppConfig) *gin.Engine {
 	router := gin.Default()
 
 	authMiddleware := auth.NewSharedAuthMiddleware(customLog.WithComponent(cfg.LogLevel, "AUTH-MIDDLEWARE"))

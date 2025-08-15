@@ -1,29 +1,31 @@
 package service
 
 import (
-	"encoding/json"
+	"context"
 	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/cart/internal"
 	"github.com/hthinh24/go-store/services/cart/internal/config"
 	"github.com/hthinh24/go-store/services/cart/internal/constants"
-	"github.com/hthinh24/go-store/services/cart/internal/dto/http/product"
+	"github.com/hthinh24/go-store/services/cart/internal/controller/http/client"
 	"github.com/hthinh24/go-store/services/cart/internal/dto/request"
 	"github.com/hthinh24/go-store/services/cart/internal/dto/response"
 	"github.com/hthinh24/go-store/services/cart/internal/entity"
 	"github.com/hthinh24/go-store/services/cart/internal/errors"
-	"net/http"
+	"time"
 )
 
 type cartService struct {
 	logger         logger.Logger
 	config         config.AppConfig
 	cartRepository internal.CartRepository
+	productClient  client.ProductClient
 }
 
-func NewCartService(logger logger.Logger, cartRepository internal.CartRepository) *cartService {
+func NewCartService(logger logger.Logger, cartRepository internal.CartRepository, productClient client.ProductClient) *cartService {
 	return &cartService{
 		logger:         logger,
 		cartRepository: cartRepository,
+		productClient:  productClient,
 	}
 }
 
@@ -98,17 +100,23 @@ func (c *cartService) AddItemToCart(userID int64, item *request.AddItemRequest) 
 		return err
 	}
 
-	// 2. Get price & status of the product SKU
-	productSKUResponse, err := c.findProductSKUByID(item.ProductSKUID)
+	// 2. Get latest price & status of the product SKU using client
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	productSKUResponse, err := c.productClient.GetProductSKUByID(ctx, item.ProductSKUID)
 	if err != nil {
-		return err
+		c.logger.Error("Failed to get product SKU details", "productSKUID", item.ProductSKUID, "error", err)
+		return errors.ErrProductSKUNotFound
 	}
+
+	c.logger.Info("Stattus: ", productSKUResponse.SKU)
 	if productSKUResponse.Status != constants.ProductStatusActive {
 		c.logger.Error("Product SKU is not active", "productSKUID", item.ProductSKUID, "status", productSKUResponse.Status)
 		return errors.ErrProductSKUNotActive
 	}
 
-	// 3. Store the item in the cart
+	// 3. Store the item in the cart with latest price
 	cartItemEntity := c.createCartItemEntity(cart.ID, productSKUResponse, item)
 	if err := c.cartRepository.AddItemToCart(cartItemEntity); err != nil {
 		c.logger.Error("Failed to add item to cart", "userID", userID, "error", err)
@@ -173,7 +181,7 @@ func (c *cartService) createCartEntity(userID int64) *entity.Cart {
 	}
 }
 
-func (c *cartService) createCartItemEntity(cartID int64, productSKUResponse *product.ProductSKUDetailResponse,
+func (c *cartService) createCartItemEntity(cartID int64, productSKUResponse *client.ProductSKUDetailResponse,
 	request *request.AddItemRequest) *entity.CartItem {
 	return &entity.CartItem{
 		CartID:       cartID,
@@ -203,26 +211,4 @@ func (c *cartService) createCartItemResponse(item *entity.CartItem) response.Car
 		TotalPrice:   item.TotalPrice,
 		Status:       item.Status,
 	}
-}
-
-func (c *cartService) findProductSKUByID(productSKUID int64) (*product.ProductSKUDetailResponse, error) {
-	resp, err := http.Get(c.config.ProductServiceURL + "/v1/products/skus/" + string(productSKUID))
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.ErrProductSKUNotFound
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.ErrFetchProductSKUFailed
-	}
-
-	var productSKU product.ProductSKUDetailResponse
-	if err := json.NewDecoder(resp.Body).Decode(&productSKU); err != nil {
-		return nil, err
-	}
-
-	return &productSKU, nil
 }

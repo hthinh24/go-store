@@ -88,6 +88,7 @@ func setupRouter(productController *controller.ProductController, cfg *config.Ap
 			// Public routes
 			products.GET("/:id", productController.GetProductByID())
 			products.GET("/:id/detail", productController.GetProductDetailByID())
+			products.GET("/skus/:id", productController.GetProductSKUByID())
 
 			// Protected routes
 			// TODO - Implement this later

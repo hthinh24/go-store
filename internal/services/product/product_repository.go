@@ -16,6 +16,8 @@ type ProductRepository interface {
 	FindProductOptionsInfoByProductID(productID int64) (*[]entity.ProductOptionInfo, error)
 	FindProductSKUsByProductID(id int64) (*[]repository.ProductSKUDetail, error)
 
+	FindProductSKUByID(skuID int64) (*repository.ProductSKUDetail, error)
+
 	FindProductAttributesByIDs(productAttributeIDs []int64) (*[]entity.ProductAttribute, error)
 	FindProductOptionsByIDs(productOptionIDs []int64) (*[]entity.ProductOption, error)
 

@@ -48,6 +48,24 @@ func (p *productService) GetProductDetailByID(id int64) (*response.ProductDetail
 	return p.createProductDetailResponse(productEntity), nil
 }
 
+func (p *productService) GetProductSKUByID(skuID int64) (*response.ProductSKUDetailResponse, error) {
+	p.logger.Info("Get product SKU with ID: ", skuID)
+
+	productSKUEntity, err := p.productRepository.FindProductSKUByID(skuID)
+	if err != nil {
+		p.logger.Error("Error retrieving product SKU with ID: ", skuID, "Error: ", err)
+		return nil, err
+	}
+
+	product, err := p.productRepository.FindProductByID(productSKUEntity.ProductID)
+	if err != nil {
+		return nil, err
+	}
+
+	p.logger.Info("Product SKU retrieved successfully, ID: ", productSKUEntity.ID)
+	return p.createProductSKUWithInventoryResponse(product.BasePrice, productSKUEntity), nil
+}
+
 func (p *productService) CreateProduct(data *request.CreateProductRequest) (*response.ProductDetailResponse, error) {
 	p.logger.Info("Creating product with name", data.Name)
 
@@ -462,20 +480,20 @@ func (p *productService) createProductWithOptionValuesResponse(option *entity.Pr
 
 func (p *productService) createProductSKUWithInventoryResponse(
 	productPrice float64,
-	productSKUWithInventory *repository.ProductSKUDetail,
+	productSKUDetail *repository.ProductSKUDetail,
 ) *response.ProductSKUDetailResponse {
-	productSKUPrice := p.calculateProductSKUPrice(productPrice, productSKUWithInventory.ExtraPrice)
+	productSKUPrice := p.calculateProductSKUPrice(productPrice, productSKUDetail.ExtraPrice)
 	return &response.ProductSKUDetailResponse{
-		ID:            productSKUWithInventory.ID,
-		SKU:           productSKUWithInventory.SKU,
-		SKUSignature:  productSKUWithInventory.SKUSignature,
+		ID:            productSKUDetail.ID,
+		SKU:           productSKUDetail.SKU,
+		SKUSignature:  productSKUDetail.SKUSignature,
 		Price:         productSKUPrice,
-		SalePrice:     p.calculateProductSKUSalePrice(productSKUPrice, productSKUWithInventory.SaleType, productSKUWithInventory.SaleValue),
-		SaleStartDate: productSKUWithInventory.SaleStartDate,
-		SaleEndDate:   productSKUWithInventory.SaleEndDate,
-		Stock:         productSKUWithInventory.Stock,
-		Status:        productSKUWithInventory.Status,
-		ProductID:     productSKUWithInventory.ProductID,
+		SalePrice:     p.calculateProductSKUSalePrice(productSKUPrice, productSKUDetail.SaleType, productSKUDetail.SaleValue),
+		SaleStartDate: productSKUDetail.SaleStartDate,
+		SaleEndDate:   productSKUDetail.SaleEndDate,
+		Stock:         productSKUDetail.Stock,
+		Status:        productSKUDetail.Status,
+		ProductID:     productSKUDetail.ProductID,
 	}
 }
 

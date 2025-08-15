@@ -1,4 +1,4 @@
-package controller
+package http
 
 import (
 	"errors"
@@ -51,7 +51,7 @@ func (c *CartController) GetCartItemsByUserID() func(c *gin.Context) {
 			return
 		}
 
-		cartItems, err := c.cartService.GetCartItemsByCartID(userID)
+		cartItems, err := c.cartService.GetCartByUserID(userID)
 		if err != nil {
 			c.handleCartError(ctx, err)
 			return
