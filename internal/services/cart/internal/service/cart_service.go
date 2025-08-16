@@ -90,8 +90,8 @@ func (c *cartService) GetCartByUserID(userID int64) (*response.CartResponse, err
 	return c.createCartResponse(cart, cartItemsResponse), nil
 }
 
-func (c *cartService) AddItemToCart(userID int64, item *request.AddItemRequest) error {
-	c.logger.Info("Adding item to cart for user ID", "userID", userID)
+func (c *cartService) AddItemToCart(userID int64, newItem *request.AddItemRequest) error {
+	c.logger.Info("Adding newItem to cart for user ID", "userID", userID)
 
 	// 1. Find the cart by user ID
 	cart, err := c.cartRepository.FindCartByUserID(userID)
@@ -104,22 +104,22 @@ func (c *cartService) AddItemToCart(userID int64, item *request.AddItemRequest) 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	productSKUResponse, err := c.productClient.GetProductSKUByID(ctx, item.ProductSKUID)
+	productSKUResponse, err := c.productClient.GetProductSKUByID(ctx, newItem.ProductSKUID)
 	if err != nil {
-		c.logger.Error("Failed to get product SKU details", "productSKUID", item.ProductSKUID, "error", err)
+		c.logger.Error("Failed to get product SKU details", "productSKUID", newItem.ProductSKUID, "error", err)
 		return errors.ErrProductSKUNotFound
 	}
 
 	c.logger.Info("Stattus: ", productSKUResponse.SKU)
 	if productSKUResponse.Status != constants.ProductStatusActive {
-		c.logger.Error("Product SKU is not active", "productSKUID", item.ProductSKUID, "status", productSKUResponse.Status)
+		c.logger.Error("Product SKU is not active", "productSKUID", newItem.ProductSKUID, "status", productSKUResponse.Status)
 		return errors.ErrProductSKUNotActive
 	}
 
-	// 3. Store the item in the cart with latest price
-	cartItemEntity := c.createCartItemEntity(cart.ID, productSKUResponse, item)
+	// 3. Store the newItem in the cart with latest price
+	cartItemEntity := c.createCartItemEntity(cart.ID, productSKUResponse)
 	if err := c.cartRepository.AddItemToCart(cartItemEntity); err != nil {
-		c.logger.Error("Failed to add item to cart", "userID", userID, "error", err)
+		c.logger.Error("Failed to add newItem to cart", "userID", userID, "error", err)
 		return err
 	}
 
@@ -181,12 +181,11 @@ func (c *cartService) createCartEntity(userID int64) *entity.Cart {
 	}
 }
 
-func (c *cartService) createCartItemEntity(cartID int64, productSKUResponse *client.ProductSKUDetailResponse,
-	request *request.AddItemRequest) *entity.CartItem {
+func (c *cartService) createCartItemEntity(cartID int64, productSKUResponse *client.ProductSKUDetailResponse) *entity.CartItem {
 	return &entity.CartItem{
 		CartID:       cartID,
-		ProductID:    request.ProductID,
-		ProductSKUID: request.ProductSKUID,
+		ProductID:    productSKUResponse.ProductID,
+		ProductSKUID: productSKUResponse.ID,
 		UnitPrice:    productSKUResponse.Price,
 		Status:       productSKUResponse.Status,
 	}

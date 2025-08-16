@@ -96,6 +96,7 @@ func (u *userService) CreateUser(data *request.CreateUserRequest) (*response.Use
 			u.logger.Warn("User created successfully but cart creation failed - user can create cart later")
 			// Rollback user creation if needed
 			u.userRepository.DeleteUser(user.ID)
+			return nil, errors.ErrCartCreationFailed{}
 		} else {
 			u.logger.Info("Cart created successfully for user ID:", user.ID)
 		}

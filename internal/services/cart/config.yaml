@@ -1,0 +1,72 @@
+environment: "development"
+service_name: "cart"
+
+# Application Configuration (host and port from .env: SERVER_HOST=localhost, SERVER_PORT=8082)
+app:
+  host: "localhost"
+  port: "8082"
+
+# HTTP Server Configuration
+http:
+  read_timeout: 10
+  write_timeout: 10
+  max_header_bytes: 1048576
+  allowed_origins: "*"
+  allowed_methods: "GET,POST,PUT,DELETE,OPTIONS"
+  allowed_headers: "Content-Type,Authorization"
+  exposed_headers: ""
+  allow_credentials: true
+
+# Database Configuration (from .env: DB_HOST=localhost, DB_PORT=5003, etc.)
+pg:
+  host: "localhost"
+  port: "5003"
+  user: "postgres"
+  password: "root"
+  database: "postgres"
+  ssl_mode: "disable"
+  max_open_conns: 25
+  max_idle_conns: 10
+  conn_max_lifetime: 3600
+  conn_max_idle_time: 1800
+
+# JWT Configuration (cart service doesn't have JWT in .env, using defaults)
+jwt:
+  secret: "your-secret-key"
+  expiration: "24h"
+  issuer: "gostore-cart"
+  audience: "gostore-users"
+
+# Redis Configuration (from .env: REDIS_HOST=localhost, REDIS_PORT=6002)
+redis:
+  host: "localhost"
+  port: "6002"
+  password: ""
+  db: 0
+  pool_size: 10
+  min_idle_conns: 3
+  dial_timeout: 5
+  read_timeout: 3
+  write_timeout: 3
+  idle_timeout: 300
+
+# Logging Configuration (from .env: LOG_LEVEL=info)
+log:
+  level: "info"
+  format: "json"
+  output: "stdout"
+  file_path: ""
+  max_size: 10
+  max_backups: 3
+  max_age: 28
+  compress: true
+
+# Services Configuration for inter-service communication (updated PRODUCT_SERVICE_URL)
+services:
+  identity_service_url: "http://localhost:8080"
+  product_service_url: "http://localhost:8081"
+  cart_service_url: "http://localhost:8082"
+  order_service_url: "http://localhost:8083"
+  gateway_service_url: "http://localhost:8000"
+  notification_service_url: "http://localhost:8084"
+  payment_service_url: "http://localhost:8085"

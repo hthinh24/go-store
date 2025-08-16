@@ -2,122 +2,105 @@ package config
 
 import (
 	"fmt"
-	"os"
+	"github.com/hthinh24/go-store/internal/pkg/config"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type AppConfig struct {
-	// Database Configuration
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	DBSSLMode  string
-
-	// JWT Configuration
-	JWTSecret           string
-	JWTExpiresIn        time.Duration
-	JWTRefreshExpiresIn time.Duration
-
-	// Server Configuration
-	ServerPort string
-	ServerHost string
-
-	// Log Configuration
-	LogLevel string
-
-	// Redis Configuration
-	RedisHost     string
-	RedisPort     string
-	RedisPassword string
-
-	// External Services
-	CartServiceURL string
-
-	// Environment
-	Environment string
+	*config.Config
 }
 
-func LoadConfig(filename string) (*AppConfig, error) {
-	// Load .env file in development
-	if os.Getenv("ENV") != "production" {
-		err := godotenv.Load(filename)
-		if err != nil {
-			// Don't fail if .env file doesn't exist
-			fmt.Println("Warning: .env file not found, using system environment variables")
-		}
+func LoadConfig(configPath string) (*AppConfig, error) {
+	// Load shared configuration from pkg
+	sharedConfig, err := config.LoadConfig(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error loading shared config: %w", err)
 	}
 
-	config := &AppConfig{
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", ""),
-		DBName:     getEnv("DB_NAME", "go_store_identity"),
-		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
-
-		JWTSecret:           getEnv("JWT_SECRET", ""),
-		JWTExpiresIn:        time.Hour * 24,      // Default to 24 hours
-		JWTRefreshExpiresIn: time.Hour * 24 * 30, // Default to 30 days
-
-		ServerPort: getEnv("SERVER_PORT", "8080"),
-		ServerHost: getEnv("SERVER_HOST", "localhost"),
-
-		LogLevel: getEnv("LOG_LEVEL", "info"),
-
-		RedisHost:     getEnv("REDIS_HOST", "localhost"),
-		RedisPort:     getEnv("REDIS_PORT", "6379"),
-		RedisPassword: getEnv("REDIS_PASSWORD", ""),
-
-		CartServiceURL: getEnv("CART_SERVICE_URL", ""),
-
-		Environment: getEnv("ENV", "development"),
+	appConfig := &AppConfig{
+		Config: sharedConfig,
 	}
 
-	// Validate required fields
-	if err := config.validate(); err != nil {
-		return nil, err
-	}
-
-	return config, nil
+	return appConfig, nil
 }
 
-func (c *AppConfig) validate() error {
-	if c.JWTSecret == "" {
-		return fmt.Errorf("JWT_SECRET is required")
-	}
+// Legacy getter methods for backward compatibility
+func (c *AppConfig) GetDBHost() string {
+	return c.PG.Host
+}
 
-	if len(c.JWTSecret) < 32 {
-		return fmt.Errorf("JWT_SECRET must be at least 32 characters long")
-	}
+func (c *AppConfig) GetDBPort() string {
+	return c.PG.Port
+}
 
-	if c.DBPassword == "" {
-		return fmt.Errorf("DB_PASSWORD is required")
-	}
+func (c *AppConfig) GetDBUser() string {
+	return c.PG.User
+}
 
-	return nil
+func (c *AppConfig) GetDBPassword() string {
+	return c.PG.Password
+}
+
+func (c *AppConfig) GetDBName() string {
+	return c.PG.Database // Updated field name
+}
+
+func (c *AppConfig) GetDBSSLMode() string {
+	return c.PG.SSLMode // Updated field name
+}
+
+func (c *AppConfig) GetJWTSecret() string {
+	return c.JWT.Secret
+}
+
+func (c *AppConfig) GetJWTExpiresIn() time.Duration {
+	duration, _ := time.ParseDuration(c.JWT.Expiration) // Updated field name
+	return duration
+}
+
+func (c *AppConfig) GetJWTRefreshExpiresIn() time.Duration {
+	// Since refresh_expires_in is not in pkg struct, use a default or derive from expiration
+	duration, _ := time.ParseDuration("168h") // 7 days default
+	return duration
+}
+
+func (c *AppConfig) GetServerPort() string {
+	return c.App.Port // Updated to use App.Port
+}
+
+func (c *AppConfig) GetServerHost() string {
+	return c.App.Host // Updated to use App.Host
+}
+
+func (c *AppConfig) GetLogLevel() string {
+	return c.Log.Level
+}
+
+func (c *AppConfig) GetRedisHost() string {
+	return c.Redis.Host
+}
+
+func (c *AppConfig) GetRedisPort() string {
+	return c.Redis.Port
+}
+
+func (c *AppConfig) GetRedisPassword() string {
+	return c.Redis.Password
+}
+
+func (c *AppConfig) GetCartServiceURL() string {
+	return c.Services.GetServiceURL("cart")
+}
+
+func (c *AppConfig) GetEnvironment() string {
+	return c.Environment
 }
 
 func (c *AppConfig) GetDatabaseURL() string {
-	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Shanghai",
-		c.DBHost, c.DBUser, c.DBPassword, c.DBName, c.DBPort, c.DBSSLMode)
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s TimeZone=Asia/Shanghai",
+		c.PG.Host, c.PG.Port, c.PG.User, c.PG.Password, c.PG.Database, c.PG.SSLMode) // Updated field names
 }
 
 func (c *AppConfig) GetServerAddress() string {
-	return fmt.Sprintf("%s:%s", c.ServerHost, c.ServerPort)
-}
-
-func (c *AppConfig) IsProduction() bool {
-	return c.Environment == "production"
-}
-
-// getEnv gets environment variable with fallback
-func getEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
+	return fmt.Sprintf("%s:%s", c.GetServerHost(), c.GetServerPort()) // Updated to use GetServerHost and GetServerPort
 }

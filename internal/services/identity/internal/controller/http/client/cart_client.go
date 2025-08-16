@@ -41,7 +41,7 @@ func (c *cartClient) CreateCart(ctx context.Context, userID int64) error {
 		return fmt.Errorf("failed to marshal cart request: %w", err)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/v1/cart", bytes.NewBuffer(jsonData))
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/v1/cart/register", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

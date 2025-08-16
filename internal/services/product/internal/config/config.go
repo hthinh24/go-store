@@ -2,97 +2,107 @@ package config
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/joho/godotenv"
+	"github.com/hthinh24/go-store/internal/pkg/config"
+	"time"
 )
 
 type AppConfig struct {
-	// Database Configuration
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	DBSSLMode  string
-
-	// Server Configuration
-	ServerPort string
-	ServerHost string
-
-	// JWT Configuration
-	JWTSecret string
-	JWTExpire string
-
-	UserServiceURL string
-
-	// Log Configuration
-	LogLevel string
-
-	// Redis Configuration
-	RedisHost     string
-	RedisPort     string
-	RedisPassword string
-
-	// Environment
-	Environment string
+	*config.Config
 }
 
-func LoadConfig(filename string) (*AppConfig, error) {
-	// Load .env file in development
-	if os.Getenv("ENV") != "production" {
-		err := godotenv.Load(filename)
-		if err != nil {
-			// Don't fail if .env file doesn't exist
-			fmt.Println("Warning: .env file not found, using system environment variables")
-		}
+func LoadConfig(configPath string) (*AppConfig, error) {
+	// Load shared configuration from pkg
+	sharedConfig, err := config.LoadConfig(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error loading shared config: %w", err)
 	}
 
-	config := &AppConfig{
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", ""),
-		DBName:     getEnv("DB_NAME", "go_store_identity"),
-		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
-
-		JWTSecret: getEnv("JWT_SECRET", ""),
-		JWTExpire: getEnv("JWT_EXPIRATION", "24h"),
-
-		ServerPort: getEnv("SERVER_PORT", "8081"),
-		ServerHost: getEnv("SERVER_HOST", "localhost"),
-
-		UserServiceURL: getEnv("USER_SERVICE_URL", "http://localhost:8080"),
-
-		LogLevel: getEnv("LOG_LEVEL", "info"),
-
-		RedisHost:     getEnv("REDIS_HOST", "localhost"),
-		RedisPort:     getEnv("REDIS_PORT", "6379"),
-		RedisPassword: getEnv("REDIS_PASSWORD", ""),
-
-		Environment: getEnv("ENV", "development"),
+	appConfig := &AppConfig{
+		Config: sharedConfig,
 	}
 
-	return config, nil
+	return appConfig, nil
+}
+
+// Legacy getter methods for backward compatibility
+func (c *AppConfig) GetDBHost() string {
+	return c.PG.Host
+}
+
+func (c *AppConfig) GetDBPort() string {
+	return c.PG.Port
+}
+
+func (c *AppConfig) GetDBUser() string {
+	return c.PG.User
+}
+
+func (c *AppConfig) GetDBPassword() string {
+	return c.PG.Password
+}
+
+func (c *AppConfig) GetDBName() string {
+	return c.PG.Database
+}
+
+func (c *AppConfig) GetDBSSLMode() string {
+	return c.PG.SSLMode
+}
+
+func (c *AppConfig) GetJWTSecret() string {
+	return c.JWT.Secret
+}
+
+func (c *AppConfig) GetJWTExpire() string {
+	return c.JWT.Expiration
+}
+
+func (c *AppConfig) GetJWTExpiresIn() time.Duration {
+	duration, _ := time.ParseDuration(c.JWT.Expiration)
+	return duration
+}
+
+func (c *AppConfig) GetServerPort() string {
+	return c.App.Port
+}
+
+func (c *AppConfig) GetServerHost() string {
+	return c.App.Host
+}
+
+func (c *AppConfig) GetUserServiceURL() string {
+	return c.Services.GetServiceURL("identity")
+}
+
+func (c *AppConfig) GetLogLevel() string {
+	return c.Log.Level
+}
+
+func (c *AppConfig) GetRedisHost() string {
+	return c.Redis.Host
+}
+
+func (c *AppConfig) GetRedisPort() string {
+	return c.Redis.Port
+}
+
+func (c *AppConfig) GetRedisPassword() string {
+	return c.Redis.Password
+}
+
+func (c *AppConfig) GetEnvironment() string {
+	return c.Environment
 }
 
 func (c *AppConfig) GetDatabaseURL() string {
 	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Shanghai",
-		c.DBHost, c.DBUser, c.DBPassword, c.DBName, c.DBPort, c.DBSSLMode)
+		c.PG.Host, c.PG.User, c.PG.Password, c.PG.Database, c.PG.Port, c.PG.SSLMode)
 }
 
 func (c *AppConfig) GetServerAddress() string {
-	return fmt.Sprintf("%s:%s", c.ServerHost, c.ServerPort)
+	return fmt.Sprintf("%s:%s", c.App.Host, c.App.Port)
 }
 
 func (c *AppConfig) IsProduction() bool {
 	return c.Environment == "production"
-}
-
-// getEnv gets environment variable with fallback
-func getEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
 }

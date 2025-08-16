@@ -17,6 +17,9 @@ func HandleError(c *gin.Context, err error) {
 	case errors.ErrUserAlreadyExists:
 		response := rest.NewErrorResponse(rest.ConflictError, e.Error())
 		c.JSON(http.StatusConflict, response)
+	case errors.ErrCartCreationFailed:
+		response := rest.NewErrorResponse(rest.InternalServerErrorError, e.Error())
+		c.JSON(http.StatusInternalServerError, response)
 	case errors.ErrInvalidCredentials:
 		response := rest.NewErrorResponse(rest.UnauthorizedError, e.Error())
 		c.JSON(http.StatusUnauthorized, response)

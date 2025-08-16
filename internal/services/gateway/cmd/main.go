@@ -1,22 +1,25 @@
 package main
 
 import (
+	"github.com/hthinh24/go-store/services/gateway/internal/config"
+	"github.com/hthinh24/go-store/services/gateway/internal/router"
 	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hthinh24/go-store/internal/pkg/logger"
-	"github.com/hthinh24/go-store/services/gateway/internal/config"
-	"github.com/hthinh24/go-store/services/gateway/internal/router"
 )
 
 func main() {
-	fileName := ".env"
+	configPath := "config.yaml"
 
-	// Load configuration
-	cfg, _ := config.LoadConfig(fileName)
+	// Load configuration using shared pkg config
+	cfg, err := config.LoadConfig(configPath)
+	if err != nil {
+		log.Fatal("Failed to load config:", err)
+	}
 
 	// Initialize logger
-	appLogger := logger.WithComponent("info", "GATEWAY")
+	appLogger := logger.WithComponent(cfg.Log.Level, "GATEWAY")
 
 	// Create gateway
 	gateway := router.NewGateway(cfg, appLogger)
@@ -28,8 +31,8 @@ func main() {
 	gateway.SetupRoutes(r)
 
 	// Start server
-	appLogger.Info("Starting Gateway on port", cfg.Port)
-	if err := r.Run(":" + cfg.Port); err != nil {
+	appLogger.Info("Starting Gateway on port", cfg.GetPort())
+	if err := r.Run(cfg.GetServerAddress()); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }

@@ -115,19 +115,19 @@ func (a *authService) generateToken(user *entity.User) (string, error) {
 		Roles:       roleNames,
 		Permissions: permissions,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(a.config.JWTExpiresIn)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(a.config.GetJWTExpiresIn())),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(a.config.JWTSecret))
+	return token.SignedString([]byte(a.config.GetJWTSecret()))
 }
 
 func (a *authService) validateToken(tokenString string) (*middleware.JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &middleware.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(a.config.JWTSecret), nil
+		return []byte(a.config.GetJWTSecret()), nil
 	})
 	if err != nil {
 		return nil, err

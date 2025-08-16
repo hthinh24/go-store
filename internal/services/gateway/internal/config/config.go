@@ -2,9 +2,7 @@ package config
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/joho/godotenv"
+	"github.com/hthinh24/go-store/internal/pkg/config"
 )
 
 const (
@@ -13,35 +11,40 @@ const (
 )
 
 type GatewayConfig struct {
-	Port               string
-	IdentityServiceURL string
-	ProductServiceURL  string
-	CartServiceURL     string
+	*config.Config
 }
 
-func LoadConfig(fileName string) (*GatewayConfig, error) {
-	err := godotenv.Load(fileName)
+func LoadConfig(configPath string) (*GatewayConfig, error) {
+	// Load shared configuration from pkg
+	sharedConfig, err := config.LoadConfig(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("error loading %s file: %w", fileName, err)
+		return nil, fmt.Errorf("error loading shared config: %w", err)
 	}
 
-	config := &GatewayConfig{
-		Port:               getEnv("GATEWAY_PORT", "8080"),
-		IdentityServiceURL: getEnv("IDENTITY_SERVICE_URL", "http://localhost:8080"),
-		ProductServiceURL:  getEnv("PRODUCT_SERVICE_URL", "http://localhost:8081"),
-		CartServiceURL:     getEnv("CART_SERVICE_URL", "http://localhost:8082"),
+	gatewayConfig := &GatewayConfig{
+		Config: sharedConfig,
 	}
 
-	return config, nil
+	return gatewayConfig, nil
 }
 
 func (c *GatewayConfig) GetServerAddress() string {
-	return ":" + c.Port
+	return fmt.Sprintf("%s:%s", c.App.Host, c.App.Port)
 }
 
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
+// Legacy methods for backward compatibility
+func (c *GatewayConfig) GetPort() string {
+	return c.App.Port // Updated to use App.Port
+}
+
+func (c *GatewayConfig) GetIdentityServiceURL() string {
+	return c.Services.GetServiceURL("identity")
+}
+
+func (c *GatewayConfig) GetProductServiceURL() string {
+	return c.Services.GetServiceURL("product")
+}
+
+func (c *GatewayConfig) GetCartServiceURL() string {
+	return c.Services.GetServiceURL("cart")
 }

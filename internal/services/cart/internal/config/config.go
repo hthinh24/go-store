@@ -2,84 +2,93 @@ package config
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
-	"os"
+	"github.com/hthinh24/go-store/internal/pkg/config"
 )
 
 type AppConfig struct {
-	// Database Configuration
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	DBSSLMode  string
-
-	// Server Configuration
-	ServerPort string
-	ServerHost string
-
-	ProductServiceURL string
-
-	// Log Configuration
-	LogLevel string
-
-	// Redis Configuration
-	RedisHost     string
-	RedisPort     string
-	RedisPassword string
-
-	// Environment
-	Environment string
+	*config.Config
 }
 
-func LoadConfig(filename string) (*AppConfig, error) {
-	// Load .env file in development
-	if os.Getenv("ENV") != "production" {
-		err := godotenv.Load(filename)
-		if err != nil {
-			// Don't fail if .env file doesn't exist
-			fmt.Println("Warning: .env file not found, using system environment variables")
-		}
+func LoadConfig(configPath string) (*AppConfig, error) {
+	// Load shared configuration from pkg
+	sharedConfig, err := config.LoadConfig(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error loading shared config: %w", err)
 	}
 
-	config := &AppConfig{
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", ""),
-		DBName:     getEnv("DB_NAME", "go_store_identity"),
-		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
-
-		ServerPort: getEnv("SERVER_PORT", "8080"),
-		ServerHost: getEnv("SERVER_HOST", "localhost"),
-
-		ProductServiceURL: getEnv("PRODUCT_SERVICE_URL", "http://localhost:8081"),
-
-		LogLevel: getEnv("LOG_LEVEL", "info"),
-
-		RedisHost:     getEnv("REDIS_HOST", "localhost"),
-		RedisPort:     getEnv("REDIS_PORT", "6379"),
-		RedisPassword: getEnv("REDIS_PASSWORD", ""),
-
-		Environment: getEnv("ENV", "development"),
+	appConfig := &AppConfig{
+		Config: sharedConfig,
 	}
 
-	return config, nil
+	return appConfig, nil
+}
+
+// Legacy getter methods for backward compatibility
+func (c *AppConfig) GetDBHost() string {
+	return c.PG.Host
+}
+
+func (c *AppConfig) GetDBPort() string {
+	return c.PG.Port
+}
+
+func (c *AppConfig) GetDBUser() string {
+	return c.PG.User
+}
+
+func (c *AppConfig) GetDBPassword() string {
+	return c.PG.Password
+}
+
+func (c *AppConfig) GetDBName() string {
+	return c.PG.Database
+}
+
+func (c *AppConfig) GetDBSSLMode() string {
+	return c.PG.SSLMode
+}
+
+func (c *AppConfig) GetServerPort() string {
+	return c.App.Port
+}
+
+func (c *AppConfig) GetServerHost() string {
+	return c.App.Host
+}
+
+func (c *AppConfig) GetProductServiceURL() string {
+	return c.Services.GetServiceURL("product")
+}
+
+func (c *AppConfig) GetLogLevel() string {
+	return c.Log.Level
+}
+
+func (c *AppConfig) GetRedisHost() string {
+	return c.Redis.Host
+}
+
+func (c *AppConfig) GetRedisPort() string {
+	return c.Redis.Port
+}
+
+func (c *AppConfig) GetRedisPassword() string {
+	return c.Redis.Password
+}
+
+func (c *AppConfig) GetEnvironment() string {
+	return c.Environment
+}
+
+func (c *AppConfig) GetDatabaseURL() string {
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Shanghai",
+		c.PG.Host, c.PG.User, c.PG.Password, c.PG.Database, c.PG.Port, c.PG.SSLMode)
 }
 
 func (c *AppConfig) GetServerAddress() string {
-	return fmt.Sprintf("%s:%s", c.ServerHost, c.ServerPort)
+	return fmt.Sprintf("%s:%s", c.App.Host, c.App.Port)
 }
 
 func (c *AppConfig) IsProduction() bool {
 	return c.Environment == "production"
-}
-
-// getEnv gets environment variable with fallback
-func getEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
 }

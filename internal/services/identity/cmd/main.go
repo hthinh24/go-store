@@ -3,10 +3,10 @@ package main
 import (
 	"errors"
 	"github.com/hthinh24/go-store/services/identity"
-	"github.com/hthinh24/go-store/services/identity/internal/config"
+	config "github.com/hthinh24/go-store/services/identity/internal/config"
 	"github.com/hthinh24/go-store/services/identity/internal/constants"
 	"github.com/hthinh24/go-store/services/identity/internal/controller/http/client"
-	"github.com/hthinh24/go-store/services/identity/internal/controller/http/v1"
+	v1 "github.com/hthinh24/go-store/services/identity/internal/controller/http/v1"
 	"github.com/hthinh24/go-store/services/identity/internal/entity"
 	customErr "github.com/hthinh24/go-store/services/identity/internal/errors"
 	"github.com/hthinh24/go-store/services/identity/internal/middleware"
@@ -23,16 +23,18 @@ import (
 )
 
 func main() {
-	// Load configuration from environment variables
-	cfg, err := config.LoadConfig(".env")
+	configPath := "config.yaml"
+
+	// Load configuration using shared pkg config
+	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	// Initialize logger
-	appLogger := logger.NewAppLogger(cfg.LogLevel)
+	appLogger := logger.NewAppLogger(cfg.GetLogLevel())
 	appLogger.Info("Starting Identity Service...")
-	appLogger.Info("Environment: %s", cfg.Environment)
+	appLogger.Info("Environment: %s", cfg.GetEnvironment())
 
 	// Initialize database connection
 	db, err := initDatabase(cfg)
@@ -43,29 +45,29 @@ func main() {
 	appLogger.Info("Database connected successfully")
 
 	// Initialize repositories
-	userRepo := repository.NewUserRepository(logger.WithComponent(cfg.LogLevel, "USER-REPOSITORY"), db)
-	authRepo := repository.NewAuthRepository(logger.WithComponent(cfg.LogLevel, "AUTH-REPOSITORY"), db)
+	userRepo := repository.NewUserRepository(logger.WithComponent(cfg.GetLogLevel(), "USER-REPOSITORY"), db)
+	authRepo := repository.NewAuthRepository(logger.WithComponent(cfg.GetLogLevel(), "AUTH-REPOSITORY"), db)
 
 	// Initialize external service clients
 	var cartClient client.CartClient
-	if cfg.CartServiceURL != "" {
-		cartClient = client.NewCartClient(cfg.CartServiceURL)
-		appLogger.Info("Cart service client initialized with URL: %s", cfg.CartServiceURL)
+	if cfg.GetCartServiceURL() != "" {
+		cartClient = client.NewCartClient(cfg.GetServiceURL("cart"))
+		appLogger.Info("Cart service client initialized with URL: %s", cfg.GetCartServiceURL())
 	} else {
 		appLogger.Warn("Cart service URL not configured, cart creation will be skipped")
 		cartClient = client.NewCartClient("") // This will effectively disable cart creation
 	}
 
 	// Initialize services
-	authService := service.NewAuthService(logger.WithComponent(cfg.LogLevel, "AUTH-SERVICE"), userRepo, authRepo, cfg)
-	userService := service.NewUserService(logger.WithComponent(cfg.LogLevel, "USER-SERVICE"), userRepo, authRepo, cartClient)
+	authService := service.NewAuthService(logger.WithComponent(cfg.GetLogLevel(), "AUTH-SERVICE"), userRepo, authRepo, cfg)
+	userService := service.NewUserService(logger.WithComponent(cfg.GetLogLevel(), "USER-SERVICE"), userRepo, authRepo, cartClient)
 
 	// Initialize middleware
-	authMiddleware := middleware.NewAuthMiddleware(logger.WithComponent(cfg.LogLevel, "AUTH-MIDDLEWARE"), cfg.JWTSecret)
+	authMiddleware := middleware.NewAuthMiddleware(logger.WithComponent(cfg.GetLogLevel(), "AUTH-MIDDLEWARE"), cfg.GetJWTSecret())
 
 	// Initialize controllers
-	authController := v1.NewAuthController(logger.WithComponent(cfg.LogLevel, "AUTH-CONTROLLER"), authService)
-	userController := v1.NewUserController(logger.WithComponent(cfg.LogLevel, "USER-CONTROLLER"), userService)
+	authController := v1.NewAuthController(logger.WithComponent(cfg.GetLogLevel(), "AUTH-CONTROLLER"), authService)
+	userController := v1.NewUserController(logger.WithComponent(cfg.GetLogLevel(), "USER-CONTROLLER"), userService)
 
 	// Setup router
 	router := setupRouter(authController, userController, authMiddleware)

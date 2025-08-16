@@ -101,7 +101,7 @@ func (g *Gateway) isPublicEndpoint(path, method string) bool {
 
 func (g *Gateway) verifyWithIdentityService(authToken string) (*VerifyResponse, error) {
 	req, err := http.NewRequest("GET",
-		g.config.IdentityServiceURL+"/"+config.ApiVersionV1+"/auth/verify", nil)
+		g.config.GetIdentityServiceURL()+"/"+config.ApiVersionV1+"/auth/verify", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -132,11 +132,11 @@ func (g *Gateway) forwardToService(c *gin.Context, path string) {
 	// Route to appropriate service based on path
 	if strings.HasPrefix(path, "/"+config.ApiVersionV1+"/auth") ||
 		strings.HasPrefix(path, "/"+config.ApiVersionV1+"/users") {
-		targetURL = g.config.IdentityServiceURL + path
+		targetURL = g.config.GetIdentityServiceURL() + path
 	} else if strings.HasPrefix(path, "/"+config.ApiVersionV1+"/products") {
-		targetURL = g.config.ProductServiceURL + path
+		targetURL = g.config.GetProductServiceURL() + path
 	} else if strings.HasPrefix(path, "/"+config.ApiVersionV1+"/cart") {
-		targetURL = g.config.CartServiceURL + path
+		targetURL = g.config.GetCartServiceURL() + path
 	} else {
 		g.logger.Warn("No service found for path", " path: ", path)
 		c.JSON(http.StatusNotFound, gin.H{"error": "page not found"})

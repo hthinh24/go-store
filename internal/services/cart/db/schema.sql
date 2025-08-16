@@ -48,7 +48,7 @@ ALTER TABLE cart_item
 CREATE INDEX idx_cart_user_id ON cart (user_id);
 CREATE INDEX idx_cart_status ON cart (status);
 
--- Cart item table indexes
+-- Cart newItem table indexes
 CREATE INDEX idx_cart_item_cart_id ON cart_item (cart_id);
 CREATE INDEX idx_cart_item_status ON cart_item (status);
 CREATE INDEX idx_cart_item_created_at ON cart_item (created_at);

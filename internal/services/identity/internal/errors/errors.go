@@ -9,6 +9,12 @@ func (e ErrUserNotFound) Error() string {
 	return "User not found"
 }
 
+type ErrCartCreationFailed struct{}
+
+func (e ErrCartCreationFailed) Error() string {
+	return "Failed to create cart for user"
+}
+
 type ErrUserAlreadyExists struct {
 	Email string
 }

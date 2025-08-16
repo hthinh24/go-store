@@ -2,30 +2,31 @@ package main
 
 import (
 	"github.com/hthinh24/go-store/internal/pkg/middleware/auth"
-	"log"
-
-	"github.com/gin-gonic/gin"
-	customLog "github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/product/internal/config"
 	"github.com/hthinh24/go-store/services/product/internal/controller"
 	repository "github.com/hthinh24/go-store/services/product/internal/infra/repository/postgres"
 	"github.com/hthinh24/go-store/services/product/internal/service"
+	"log"
+
+	"github.com/gin-gonic/gin"
+	customLog "github.com/hthinh24/go-store/internal/pkg/logger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func main() {
-	fileName := ".env"
-	// Load configuration from environment variables
-	cfg, err := config.LoadConfig(fileName)
+	configPath := "config.yaml"
+
+	// Load configuration using shared pkg config
+	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	// Initialize appLogger
-	appLogger := customLog.NewAppLogger(cfg.LogLevel)
+	appLogger := customLog.NewAppLogger(cfg.GetLogLevel())
 	appLogger.Info("Starting Product Service...")
-	appLogger.Info("Environment: %s", cfg.Environment)
+	appLogger.Info("Environment: %s", cfg.GetEnvironment())
 
 	// Initialize database connection
 	db, err := initDatabase(cfg)
@@ -37,17 +38,17 @@ func main() {
 
 	// Initialize repositories
 	productRepository := repository.NewProductRepository(
-		customLog.WithComponent(cfg.LogLevel, "PRODUCT-REPOSITORY"),
+		customLog.WithComponent(cfg.GetLogLevel(), "PRODUCT-REPOSITORY"),
 		db)
 
 	// Initialize services
 	productService := service.NewProductService(
-		customLog.WithComponent(cfg.LogLevel, "PRODUCT-SERVICE"),
+		customLog.WithComponent(cfg.GetLogLevel(), "PRODUCT-SERVICE"),
 		productRepository)
 
 	// Initialize controllers
 	productController := controller.NewProductController(
-		customLog.WithComponent(cfg.LogLevel, "PRODUCT-CONTROLLER"),
+		customLog.WithComponent(cfg.GetLogLevel(), "PRODUCT-CONTROLLER"),
 		productService)
 
 	// Setup router
@@ -74,7 +75,7 @@ func initDatabase(cfg *config.AppConfig) (*gorm.DB, error) {
 func setupRouter(productController *controller.ProductController, cfg *config.AppConfig) *gin.Engine {
 	router := gin.Default()
 
-	authMiddleware := auth.NewSharedAuthMiddleware(customLog.WithComponent(cfg.LogLevel, "AUTH-MIDDLEWARE"))
+	authMiddleware := auth.NewSharedAuthMiddleware(customLog.WithComponent(cfg.GetLogLevel(), "AUTH-MIDDLEWARE"))
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "healthy"})
