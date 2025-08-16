@@ -30,12 +30,12 @@ func NewCartService(logger logger.Logger, cartRepository internal.CartRepository
 }
 
 func (c *cartService) CreateCart(data *request.CreateCartRequest) (*response.CartResponse, error) {
-	c.logger.Info("Creating cart for user ID", "userID", data.UserID)
+	c.logger.Info("Creating cart for user ID: ", data.UserID)
 
 	// Check if cart already exists for this user
 	existingCart, err := c.cartRepository.FindCartByUserID(data.UserID)
 	if err == nil && existingCart != nil {
-		c.logger.Info("Cart already exists for user", "userID", data.UserID, "cartID", existingCart.ID)
+		c.logger.Info("Cart already exists for user: ", data.UserID, ", cartID: ", existingCart.ID)
 		// Return existing cart with empty items
 		return c.createCartResponse(existingCart, &[]response.CartItemResponse{}), nil
 	}
@@ -45,24 +45,24 @@ func (c *cartService) CreateCart(data *request.CreateCartRequest) (*response.Car
 
 	// Pass entity to repository for persistence
 	if err := c.cartRepository.CreateCart(cart); err != nil {
-		c.logger.Error("Failed to create cart for user", "userID", data.UserID, "error", err)
+		c.logger.Error("Failed to create cart for user: ", data.UserID, ", error: ", err)
 		return nil, err
 	}
 
-	c.logger.Info("Successfully created cart", "userID", data.UserID, "cartID", cart.ID)
+	c.logger.Info("Successfully created cart for user: ", data.UserID, ", cartID: ", cart.ID)
 	return c.createCartResponse(cart, &[]response.CartItemResponse{}), nil
 }
 
 func (c *cartService) GetCartItemsByCartID(cartID int64) (*[]response.CartItemResponse, error) {
 	items, err := c.cartRepository.FindCartItemsByCartID(cartID)
 	if err != nil {
-		c.logger.Error("Failed to find cart items by cart ID, ", "cartID: ", cartID, "error", err)
+		c.logger.Error("Failed to find cart items by cart ID: ", cartID, ", error: ", err)
 		return nil, err
 	}
 
 	// If no items found, return empty cart items response
 	if items == nil || len(*items) == 0 {
-		c.logger.Info("No items found in cart", "cartID", cartID)
+		c.logger.Info("No items found in cart: ", cartID)
 		return &[]response.CartItemResponse{}, nil
 	}
 
@@ -78,7 +78,7 @@ func (c *cartService) GetCartItemsByCartID(cartID int64) (*[]response.CartItemRe
 func (c *cartService) GetCartByUserID(userID int64) (*response.CartResponse, error) {
 	cart, err := c.cartRepository.FindCartByUserID(userID)
 	if err != nil {
-		c.logger.Error("Failed to get cart by user ID, ", "userID: ", userID, "error", err)
+		c.logger.Error("Failed to get cart by user ID: ", userID, ", error: ", err)
 		return nil, err
 	}
 
@@ -91,12 +91,12 @@ func (c *cartService) GetCartByUserID(userID int64) (*response.CartResponse, err
 }
 
 func (c *cartService) AddItemToCart(userID int64, newItem *request.AddItemRequest) error {
-	c.logger.Info("Adding newItem to cart for user ID", "userID", userID)
+	c.logger.Info("Adding item to cart for user ID: ", userID)
 
 	// 1. Find the cart by user ID
 	cart, err := c.cartRepository.FindCartByUserID(userID)
 	if err != nil {
-		c.logger.Error("Failed to find cart by user ID", "userID", userID, "error", err)
+		c.logger.Error("Failed to find cart by user ID: ", userID, ", error: ", err)
 		return err
 	}
 
@@ -106,20 +106,20 @@ func (c *cartService) AddItemToCart(userID int64, newItem *request.AddItemReques
 
 	productSKUResponse, err := c.productClient.GetProductSKUByID(ctx, newItem.ProductSKUID)
 	if err != nil {
-		c.logger.Error("Failed to get product SKU details", "productSKUID", newItem.ProductSKUID, "error", err)
+		c.logger.Error("Failed to get product SKU details: ", newItem.ProductSKUID, ", error: ", err)
 		return errors.ErrProductSKUNotFound
 	}
 
-	c.logger.Info("Stattus: ", productSKUResponse.SKU)
+	c.logger.Info("Product SKU status: ", productSKUResponse.SKU)
 	if productSKUResponse.Status != constants.ProductStatusActive {
-		c.logger.Error("Product SKU is not active", "productSKUID", newItem.ProductSKUID, "status", productSKUResponse.Status)
+		c.logger.Error("Product SKU is not active: ", newItem.ProductSKUID, ", status: ", productSKUResponse.Status)
 		return errors.ErrProductSKUNotActive
 	}
 
 	// 3. Store the newItem in the cart with latest price
 	cartItemEntity := c.createCartItemEntity(cart.ID, productSKUResponse)
 	if err := c.cartRepository.AddItemToCart(cartItemEntity); err != nil {
-		c.logger.Error("Failed to add newItem to cart", "userID", userID, "error", err)
+		c.logger.Error("Failed to add item to cart for user: ", userID, ", error: ", err)
 		return err
 	}
 
@@ -127,23 +127,23 @@ func (c *cartService) AddItemToCart(userID int64, newItem *request.AddItemReques
 }
 
 func (c *cartService) UpdateItemQuantity(userID int64, itemID int64, quantity int) error {
-	c.logger.Info("Updating item quantity in cart", "userID", userID, "itemID", itemID, "quantity", quantity)
+	c.logger.Info("Updating item quantity in cart for user: ", userID, ", itemID: ", itemID, ", quantity: ", quantity)
 
 	// 1. Find the cart by user ID
 	if _, err := c.cartRepository.FindCartByUserID(userID); err != nil {
-		c.logger.Error("Failed to find cart by user ID", "userID", userID, "error", err)
+		c.logger.Error("Failed to find cart by user ID: ", userID, ", error: ", err)
 		return err
 	}
 
 	// 2. Find the cart item by item ID
 	if _, err := c.cartRepository.FindCartItemByID(itemID); err != nil {
-		c.logger.Error("Failed to find cart item by ID", "itemID", itemID, "error", err)
+		c.logger.Error("Failed to find cart item by ID: ", itemID, ", error: ", err)
 		return err
 	}
 
 	// 3. Update the item quantity in the cart
 	if err := c.cartRepository.UpdateItemQuantity(itemID, quantity); err != nil {
-		c.logger.Error("Failed to update cart item quantity", "itemID", itemID, "error", err)
+		c.logger.Error("Failed to update cart item quantity: ", itemID, ", error: ", err)
 		return err
 	}
 
@@ -151,23 +151,23 @@ func (c *cartService) UpdateItemQuantity(userID int64, itemID int64, quantity in
 }
 
 func (c *cartService) RemoveItemFromCart(userID int64, itemID int64) error {
-	c.logger.Info("Removing item from cart", "userID", userID, "itemID", itemID)
+	c.logger.Info("Removing item from cart for user: ", userID, ", itemID: ", itemID)
 
 	// 1. Find the cart by user ID
 	if _, err := c.cartRepository.FindCartByUserID(userID); err != nil {
-		c.logger.Error("Failed to find cart by user ID", "userID", userID, "error", err)
+		c.logger.Error("Failed to find cart by user ID: ", userID, ", error: ", err)
 		return err
 	}
 
 	// 2. Find the cart item by item ID
 	if _, err := c.cartRepository.FindCartItemByID(itemID); err != nil {
-		c.logger.Error("Failed to find cart item by ID", "itemID", itemID, "error", err)
+		c.logger.Error("Failed to find cart item by ID: ", itemID, ", error: ", err)
 		return err
 	}
 
 	// 3. Remove the item from the cart
 	if err := c.cartRepository.RemoveItemFromCart(itemID); err != nil {
-		c.logger.Error("Failed to remove item from cart", "itemID", itemID, "error", err)
+		c.logger.Error("Failed to remove item from cart: ", itemID, ", error: ", err)
 		return err
 	}
 

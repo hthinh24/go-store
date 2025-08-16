@@ -138,7 +138,7 @@ func (g *Gateway) forwardToService(c *gin.Context, path string) {
 	} else if strings.HasPrefix(path, "/"+config.ApiVersionV1+"/cart") {
 		targetURL = g.config.GetCartServiceURL() + path
 	} else {
-		g.logger.Warn("No service found for path", " path: ", path)
+		g.logger.Warn("No service found for path: ", path)
 		c.JSON(http.StatusNotFound, gin.H{"error": "page not found"})
 		return
 	}
@@ -146,7 +146,7 @@ func (g *Gateway) forwardToService(c *gin.Context, path string) {
 	// Create new request
 	req, err := http.NewRequest(c.Request.Method, targetURL, c.Request.Body)
 	if err != nil {
-		g.logger.Error("Failed to create request", err)
+		g.logger.Error("Failed to create request: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
@@ -161,7 +161,7 @@ func (g *Gateway) forwardToService(c *gin.Context, path string) {
 	// Forward request
 	resp, err := g.client.Do(req)
 	if err != nil {
-		g.logger.Error("Failed to forward request", err)
+		g.logger.Error("Failed to forward request: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Service unavailable"})
 		return
 	}

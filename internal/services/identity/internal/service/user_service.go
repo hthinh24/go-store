@@ -35,11 +35,11 @@ func NewUserService(logger log.Logger,
 }
 
 func (u *userService) GetUserByID(id int64) (*response.UserResponse, error) {
-	u.logger.Info("Get user by ID:", id)
+	u.logger.Info("Get user by ID: ", id)
 
 	user, err := u.userRepository.FindUserByID(id)
 	if err != nil {
-		u.logger.Error("Error fetching user by ID:", err)
+		u.logger.Error("Error fetching user by ID: ", err)
 		return nil, err
 	}
 
@@ -52,7 +52,7 @@ func (u *userService) GetUsers() (*[]response.UserResponse, error) {
 
 	users, err := u.userRepository.FindUsers()
 	if err != nil {
-		u.logger.Error("Error fetching users:", err)
+		u.logger.Error("Error fetching users: ", err)
 		return nil, err
 	}
 

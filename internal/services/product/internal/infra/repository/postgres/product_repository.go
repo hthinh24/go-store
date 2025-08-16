@@ -64,7 +64,7 @@ func (p *productRepository) Rollback() error {
 }
 
 func (p *productRepository) FindProductByID(id int64) (*entity.Product, error) {
-	p.logger.Info("Finding product by ID:", id)
+	p.logger.Info("Finding product by ID: ", id)
 
 	var product entity.Product
 	if err := p.db.Where("id = ?", id).First(&product).Error; err != nil {
@@ -75,33 +75,33 @@ func (p *productRepository) FindProductByID(id int64) (*entity.Product, error) {
 }
 
 func (p *productRepository) FindProductAttributesInfoByProductID(productID int64) (*[]entity.ProductAttributeInfo, error) {
-	p.logger.Info("Finding product attributes info by product ID:", productID)
+	p.logger.Info("Finding product attributes info by product ID: ", productID)
 
 	var productAttributesInfo []entity.ProductAttributeInfo
 	if err := p.db.Where("product_id = ?", productID).Find(&productAttributesInfo).Error; err != nil {
-		p.logger.Error("Failed to find product attributes info by product ID:", productID, "Error:", err)
+		p.logger.Error("Failed to find product attributes info by product ID: ", productID, ", Error: ", err)
 		return nil, err
 	}
 
-	p.logger.Info("Found product attributes info:", productAttributesInfo)
+	p.logger.Info("Found product attributes info: ", productAttributesInfo)
 	return &productAttributesInfo, nil
 }
 
 func (p *productRepository) FindProductOptionsInfoByProductID(productID int64) (*[]entity.ProductOptionInfo, error) {
-	p.logger.Info("Finding product options info by product ID:", productID)
+	p.logger.Info("Finding product options info by product ID: ", productID)
 
 	var productOptionsInfo []entity.ProductOptionInfo
 	if err := p.db.Where("product_id = ?", productID).Find(&productOptionsInfo).Error; err != nil {
-		p.logger.Error("Failed to find product options info by product ID:", productID, "Error:", err)
+		p.logger.Error("Failed to find product options info by product ID: ", productID, ", Error: ", err)
 		return nil, err
 	}
 
-	p.logger.Info("Found product options info:", productOptionsInfo)
+	p.logger.Info("Found product options info: ", productOptionsInfo)
 	return &productOptionsInfo, nil
 }
 
 func (p *productRepository) FindProductSKUsByProductID(id int64) (*[]repository.ProductSKUDetail, error) {
-	p.logger.Info("Finding product SKUs by product ID:", id)
+	p.logger.Info("Finding product SKUs by product ID: ", id)
 
 	var productSKUsWithInventory []repository.ProductSKUDetail
 	if err := p.db.
@@ -112,7 +112,7 @@ func (p *productRepository) FindProductSKUsByProductID(id int64) (*[]repository.
 		Joins("JOIN product_inventory AS pi ON ps.id = pi.product_sku_id").
 		Where("ps.product_id = ?", id).
 		Find(&productSKUsWithInventory).Error; err != nil {
-		p.logger.Error("Failed to find product SKUs by product ID:", id, "Error:", err)
+		p.logger.Error("Failed to find product SKUs by product ID: ", id, ", Error: ", err)
 		return nil, err
 	}
 
@@ -120,7 +120,7 @@ func (p *productRepository) FindProductSKUsByProductID(id int64) (*[]repository.
 }
 
 func (p *productRepository) FindProductSKUByID(skuID int64) (*repository.ProductSKUDetail, error) {
-	p.logger.Info("Finding product SKU by ID:", skuID)
+	p.logger.Info("Finding product SKU by ID: ", skuID)
 
 	var productSKU repository.ProductSKUDetail
 	if err := p.db.
@@ -132,48 +132,48 @@ func (p *productRepository) FindProductSKUByID(skuID int64) (*repository.Product
 		Where("ps.id = ?", skuID).
 		First(&productSKU).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			p.logger.Error("Product SKU not found with ID:", skuID)
+			p.logger.Error("Product SKU not found with ID: ", skuID)
 			return nil, productErrors.ErrProductSKUNotFound{}
 		}
-		p.logger.Error("Failed to find product SKU by ID:", skuID, "Error:", err)
+		p.logger.Error("Failed to find product SKU by ID: ", skuID, ", Error: ", err)
 		return nil, err
 	}
 
-	p.logger.Info("Found product SKU with ID:", productSKU.ID, "SKU:", productSKU.SKU, "Status:", productSKU.Status)
+	p.logger.Info("Found product SKU with ID: ", productSKU.ID, ", SKU: ", productSKU.SKU, ", Status: ", productSKU.Status)
 	return &productSKU, nil
 }
 
 func (p *productRepository) FindProductAttributesByIDs(productAttributeIDs []int64) (*[]entity.ProductAttribute, error) {
-	p.logger.Info("Finding product attributes by IDs:", productAttributeIDs)
+	p.logger.Info("Finding product attributes by IDs: ", productAttributeIDs)
 
 	var productAttributes []entity.ProductAttribute
 	if err := p.db.Where("id IN ?", productAttributeIDs).Find(&productAttributes).Error; err != nil {
-		p.logger.Error("Failed to find product attributes by IDs:", productAttributeIDs, "Error:", err)
+		p.logger.Error("Failed to find product attributes by IDs: ", productAttributeIDs, ", Error: ", err)
 		return nil, err
 	}
 
-	p.logger.Info("Found product attributes:", productAttributes)
+	p.logger.Info("Found product attributes: ", productAttributes)
 	return &productAttributes, nil
 }
 
 func (p *productRepository) FindProductOptionsByIDs(productOptionIDs []int64) (*[]entity.ProductOption, error) {
-	p.logger.Info("Finding product options by IDs:", productOptionIDs)
+	p.logger.Info("Finding product options by IDs: ", productOptionIDs)
 
 	var productOptions []entity.ProductOption
 	if err := p.db.Where("id IN ?", productOptionIDs).Find(&productOptions).Error; err != nil {
-		p.logger.Error("Failed to find product options by IDs:", productOptionIDs, "Error:", err)
+		p.logger.Error("Failed to find product options by IDs: ", productOptionIDs, ", Error: ", err)
 		return nil, err
 	}
 
-	p.logger.Info("Found product options:", productOptions)
+	p.logger.Info("Found product options: ", productOptions)
 	return &productOptions, nil
 }
 
 func (p *productRepository) CreateProduct(product *entity.Product) error {
-	p.logger.Info("Creating product:", product)
+	p.logger.Info("Creating product: ", product)
 
 	if err := p.db.Create(product).Error; err != nil {
-		p.logger.Error("Failed to create product:", product, "Error:", err)
+		p.logger.Error("Failed to create product: ", product, ", Error: ", err)
 
 		// Check for specific database constraint violations
 		errMsg := strings.ToLower(err.Error())
@@ -215,15 +215,15 @@ func (p *productRepository) CreateProduct(product *entity.Product) error {
 		return productErrors.ErrDatabaseTransaction{Operation: "create product"}
 	}
 
-	p.logger.Info("Product created successfully:", product.ID)
+	p.logger.Info("Product created successfully: ", product.ID)
 	return nil
 }
 
 func (p *productRepository) CreateProductAttributeInfo(productAttributeInfos *[]entity.ProductAttributeInfo) error {
-	p.logger.Info("Creating product attribute infos:", productAttributeInfos)
+	p.logger.Info("Creating product attribute infos: ", productAttributeInfos)
 
 	if err := p.db.Create(productAttributeInfos).Error; err != nil {
-		p.logger.Error("Failed to create product attribute infos:", productAttributeInfos, "Error:", err)
+		p.logger.Error("Failed to create product attribute infos: ", productAttributeInfos, ", Error: ", err)
 
 		errMsg := strings.ToLower(err.Error())
 
@@ -242,10 +242,10 @@ func (p *productRepository) CreateProductAttributeInfo(productAttributeInfos *[]
 }
 
 func (p *productRepository) CreateProductOptionInfo(productOptionInfos *[]entity.ProductOptionInfo) error {
-	p.logger.Info("Creating product option infos:", productOptionInfos)
+	p.logger.Info("Creating product option infos: ", productOptionInfos)
 
 	if err := p.db.Create(productOptionInfos).Error; err != nil {
-		p.logger.Error("Failed to create product option infos:", productOptionInfos, "Error:", err)
+		p.logger.Error("Failed to create product option infos: ", productOptionInfos, ", Error: ", err)
 
 		errMsg := strings.ToLower(err.Error())
 
@@ -268,7 +268,7 @@ func (p *productRepository) CreateProductAttributeValuesIfNotExist(productAttrib
 
 	for _, value := range *productAttributeValues {
 		if err := p.db.Where("value = ?", value.Value).FirstOrCreate(&value).Error; err != nil {
-			p.logger.Error("Failed to create or find product attribute value:", value, "Error:", err)
+			p.logger.Error("Failed to create or find product attribute value: ", value, ", Error: ", err)
 			return err
 		}
 	}
@@ -278,10 +278,10 @@ func (p *productRepository) CreateProductAttributeValuesIfNotExist(productAttrib
 }
 
 func (p *productRepository) CreateProductProductAttributeValues(i *[]entity.ProductProductAttributeValue) error {
-	p.logger.Info("Creating product product attribute values:", i)
+	p.logger.Info("Creating product product attribute values: ", i)
 
 	if err := p.db.Create(i).Error; err != nil {
-		p.logger.Error("Failed to create product product attribute values:", i, "Error:", err)
+		p.logger.Error("Failed to create product product attribute values: ", i, ", Error: ", err)
 		return err
 	}
 
@@ -290,10 +290,10 @@ func (p *productRepository) CreateProductProductAttributeValues(i *[]entity.Prod
 }
 
 func (p *productRepository) CreateProductSKUs(productSKUs *[]entity.ProductSKU) error {
-	p.logger.Info("Creating product SKUs:", productSKUs)
+	p.logger.Info("Creating product SKUs: ", productSKUs)
 
 	if err := p.db.Create(productSKUs).Error; err != nil {
-		p.logger.Error("Failed to create product SKUs:", productSKUs, "Error:", err)
+		p.logger.Error("Failed to create product SKUs: ", productSKUs, ", Error: ", err)
 
 		errMsg := strings.ToLower(err.Error())
 
@@ -319,10 +319,10 @@ func (p *productRepository) CreateProductSKUs(productSKUs *[]entity.ProductSKU) 
 }
 
 func (p *productRepository) CreateProductInventories(inventories *[]entity.ProductInventory) error {
-	p.logger.Info("Creating product inventories:", inventories)
+	p.logger.Info("Creating product inventories: ", inventories)
 
 	if err := p.db.Create(inventories).Error; err != nil {
-		p.logger.Error("Failed to create product inventories:", inventories, "Error:", err)
+		p.logger.Error("Failed to create product inventories: ", inventories, ", Error: ", err)
 		return err
 	}
 
@@ -331,10 +331,10 @@ func (p *productRepository) CreateProductInventories(inventories *[]entity.Produ
 }
 
 func (p *productRepository) CreateProductOptionCombinations(productOptionCombinations *[]entity.ProductOptionCombination) error {
-	p.logger.Info("Creating product option combinations:", productOptionCombinations)
+	p.logger.Info("Creating product option combinations: ", productOptionCombinations)
 
 	if err := p.db.Create(productOptionCombinations).Error; err != nil {
-		p.logger.Error("Failed to create product option combinations:", productOptionCombinations, "Error:", err)
+		p.logger.Error("Failed to create product option combinations: ", productOptionCombinations, ", Error: ", err)
 		return err
 	}
 
@@ -343,11 +343,11 @@ func (p *productRepository) CreateProductOptionCombinations(productOptionCombina
 }
 
 func (p *productRepository) CreateProductOptionValuesIfNotExist(productOptionValues *[]entity.ProductOptionValue) error {
-	p.logger.Info("Creating product option values if not exist:", productOptionValues)
+	p.logger.Info("Creating product option values if not exist: ", productOptionValues)
 
 	for _, value := range *productOptionValues {
 		if err := p.db.Where("value = ?", value.Value).FirstOrCreate(&value).Error; err != nil {
-			p.logger.Error("Failed to create or find product option value:", value, "Error:", err)
+			p.logger.Error("Failed to create or find product option value: ", value, ", Error: ", err)
 			return err
 		}
 	}
@@ -357,13 +357,13 @@ func (p *productRepository) CreateProductOptionValuesIfNotExist(productOptionVal
 }
 
 func (p *productRepository) DeleteProduct(id int64) error {
-	p.logger.Info("Deleting product with ID:", id)
+	p.logger.Info("Deleting product with ID: ", id)
 
 	if err := p.db.Where("id = ?", id).Delete(&entity.Product{}).Error; err != nil {
-		p.logger.Error("Failed to delete product with ID:", id, "Error:", err)
+		p.logger.Error("Failed to delete product with ID: ", id, ", Error: ", err)
 		return err
 	}
 
-	p.logger.Info("Product deleted successfully:", id)
+	p.logger.Info("Product deleted successfully: ", id)
 	return nil
 }

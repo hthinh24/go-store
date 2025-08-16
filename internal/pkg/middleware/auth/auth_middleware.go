@@ -26,7 +26,7 @@ func (m *SharedAuthMiddleware) AuthRequired() gin.HandlerFunc {
 		// Check if user_id header exists (set by gateway after JWT validation)
 		userIDHeader := c.GetHeader("X-User-ID")
 		if userIDHeader == "" {
-			m.logger.Warn("User ID header missing", "header", "X-User-ID")
+			m.logger.Warn("User ID header missing, header: ", "X-User-ID")
 			c.JSON(http.StatusUnauthorized, rest.ErrorResponse{
 				ApiError: rest.UnauthorizedError,
 				Message:  "User not authenticated",
@@ -86,7 +86,7 @@ func (m *SharedAuthMiddleware) RequirePermissions(requiredPermissions ...string)
 	return func(c *gin.Context) {
 		permissions, exists := c.Get("permissions")
 		if !exists {
-			m.logger.Warn("Permissions not found in context, ", "context_key: ", "permissions")
+			m.logger.Warn("Permissions not found in context, context_key: ", "permissions")
 			c.JSON(http.StatusUnauthorized, rest.ErrorResponse{
 				ApiError: rest.UnauthorizedError,
 				Message:  "User not authenticated",
@@ -104,7 +104,7 @@ func (m *SharedAuthMiddleware) RequirePermissions(requiredPermissions ...string)
 		// Check if user has all required permissions
 		for _, requiredPerm := range requiredPermissions {
 			if !userPermMap[requiredPerm] {
-				m.logger.Warn("Access denied - missing permission", "required_permission",
+				m.logger.Warn("Access denied - missing permission, required_permission: ",
 					requiredPerm, "user_permissions", userPermissions)
 				c.JSON(http.StatusForbidden, rest.ErrorResponse{
 					ApiError: rest.ForbiddenError,
@@ -124,7 +124,7 @@ func (m *SharedAuthMiddleware) RequireAnyPermission(permissions ...string) gin.H
 	return func(c *gin.Context) {
 		userPermissions, exists := c.Get("permissions")
 		if !exists {
-			m.logger.Warn("Permissions not found in context, ", "context_key", "permissions")
+			m.logger.Warn("Permissions not found in context, context_key: ", "permissions")
 			c.JSON(http.StatusUnauthorized, rest.ErrorResponse{
 				ApiError: rest.UnauthorizedError,
 				Message:  "User not authenticated",
@@ -156,7 +156,7 @@ func (m *SharedAuthMiddleware) RequireRole(role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roles, exists := c.Get("roles")
 		if !exists {
-			m.logger.Warn("Roles not found in context, ", "context_key: ", "roles")
+			m.logger.Warn("Roles not found in context, context_key: ", "roles")
 			c.JSON(http.StatusUnauthorized, rest.ErrorResponse{
 				ApiError: rest.UnauthorizedError,
 				Message:  "User not authenticated",
@@ -186,7 +186,7 @@ func (m *SharedAuthMiddleware) RequireAnyRole(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userRoles, exists := c.Get("roles")
 		if !exists {
-			m.logger.Warn("Roles not found in context, ", "context_key: ", "roles")
+			m.logger.Warn("Roles not found in context, context_key: ", "roles")
 			c.JSON(http.StatusUnauthorized, rest.ErrorResponse{
 				ApiError: rest.UnauthorizedError,
 				Message:  "User not authenticated",

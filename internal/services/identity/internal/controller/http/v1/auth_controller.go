@@ -26,20 +26,20 @@ func (a *AuthController) Login() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		var AuthRequest request.AuthRequest
 		if err := ctx.ShouldBindJSON(&AuthRequest); err != nil {
-			a.logger.Error("Error binding JSON:", err)
+			a.logger.Error("Error binding JSON: ", err)
 			ctx.JSON(http.StatusBadRequest, rest.ErrorResponse{ApiError: rest.BadRequestError, Message: "Invalid request body"})
 			return
 		}
 
-		a.logger.Info("Processing login for user:", AuthRequest.Email)
+		a.logger.Info("Processing login for user: ", AuthRequest.Email)
 		authResponse, err := a.authService.Login(AuthRequest)
 		if err != nil {
-			a.logger.Error("Error during login:", err)
+			a.logger.Error("Error during login: ", err)
 			ctx.JSON(http.StatusInternalServerError, rest.ErrorResponse{ApiError: rest.InternalServerErrorError, Message: "Login failed"})
 			return
 		}
 
-		a.logger.Info("Login successful for user:", AuthRequest.Email)
+		a.logger.Info("Login successful for user: ", AuthRequest.Email)
 		ctx.JSON(http.StatusOK, rest.NewAPIResponse(http.StatusOK, "Login successful", authResponse))
 	}
 }
@@ -55,15 +55,15 @@ func (a *AuthController) Verify() func(ctx *gin.Context) {
 
 		token = strings.TrimPrefix(token, "Bearer ")
 
-		a.logger.Info("Verifying token:", token)
+		a.logger.Info("Verifying token: ", token)
 		verifyResponse, err := a.authService.Verify(token)
 		if err != nil {
-			a.logger.Error("Token verification failed:", err)
+			a.logger.Error("Token verification failed: ", err)
 			ctx.JSON(http.StatusUnauthorized, rest.ErrorResponse{ApiError: rest.UnauthorizedError, Message: "Invalid token"})
 			return
 		}
 
-		a.logger.Info("Token verified successfully for user:", verifyResponse.UserID)
+		a.logger.Info("Token verified successfully for user: ", verifyResponse.UserID)
 		ctx.JSON(http.StatusOK, verifyResponse)
 	}
 }
