@@ -99,6 +99,10 @@ func (c *AppConfig) GetDatabaseURL() string {
 		c.PG.Host, c.PG.User, c.PG.Password, c.PG.Database, c.PG.Port, c.PG.SSLMode)
 }
 
+func (c *AppConfig) GetRedisAddress() string {
+	return fmt.Sprintf("%s:%s", c.Redis.Host, c.Redis.Port)
+}
+
 func (c *AppConfig) GetServerAddress() string {
 	return fmt.Sprintf("%s:%s", c.App.Host, c.App.Port)
 }

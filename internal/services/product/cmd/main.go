@@ -6,7 +6,9 @@ import (
 	"github.com/hthinh24/go-store/services/product/internal/controller"
 	repository "github.com/hthinh24/go-store/services/product/internal/infra/repository/postgres"
 	"github.com/hthinh24/go-store/services/product/internal/service"
+	"github.com/redis/go-redis/v9"
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	customLog "github.com/hthinh24/go-store/internal/pkg/logger"
@@ -28,6 +30,18 @@ func main() {
 	appLogger.Info("Starting Product Service...")
 	appLogger.Info("Environment: %s", cfg.GetEnvironment())
 
+	// Init Redis
+	client := redis.NewClient(&redis.Options{
+		Addr:     cfg.GetRedisAddress(),
+		Password: cfg.GetRedisPassword(), // no password set
+		DB:       0,                      // use default DB
+		//PoolSize:     cfg.Redis.PoolSize,
+		//MinIdleConns: cfg.Redis.MinIdleConns,
+		DialTimeout:  time.Duration(cfg.Redis.DialTimeout) * time.Second,
+		ReadTimeout:  time.Duration(cfg.Redis.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.Redis.WriteTimeout) * time.Second,
+	})
+
 	// Initialize database connection
 	db, err := initDatabase(cfg)
 	if err != nil {
@@ -44,6 +58,7 @@ func main() {
 	// Initialize services
 	productService := service.NewProductService(
 		customLog.WithComponent(cfg.GetLogLevel(), "PRODUCT-SERVICE"),
+		client,
 		productRepository)
 
 	// Initialize controllers
@@ -68,6 +83,18 @@ func initDatabase(cfg *config.AppConfig) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Configure connection pool settings
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply connection pool settings from config
+	sqlDB.SetMaxOpenConns(cfg.PG.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(cfg.PG.MaxIdleConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(cfg.PG.ConnMaxLifetime) * time.Second)
+	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.PG.ConnMaxIdleTime) * time.Second)
 
 	return db, nil
 }

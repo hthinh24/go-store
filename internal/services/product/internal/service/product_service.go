@@ -1,6 +1,10 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/hthinh24/go-store/internal/pkg/logger"
 	"github.com/hthinh24/go-store/services/product"
 	"github.com/hthinh24/go-store/services/product/internal/constants"
@@ -8,18 +12,22 @@ import (
 	"github.com/hthinh24/go-store/services/product/internal/dto/request"
 	"github.com/hthinh24/go-store/services/product/internal/dto/response"
 	"github.com/hthinh24/go-store/services/product/internal/entity"
+	"github.com/redis/go-redis/v9"
 	"strings"
+	"time"
 )
 
 type productService struct {
 	logger            logger.Logger
+	redis             *redis.Client
 	productRepository product.ProductRepository
 }
 
 // NewProductService creates a new instance of ProductService
-func NewProductService(logger logger.Logger, productRepository product.ProductRepository) product.ProductService {
+func NewProductService(logger logger.Logger, redis *redis.Client, productRepository product.ProductRepository) product.ProductService {
 	return &productService{
 		logger:            logger,
+		redis:             redis,
 		productRepository: productRepository,
 	}
 }
@@ -39,13 +47,56 @@ func (p *productService) GetProductByID(id int64) (*response.ProductResponse, er
 func (p *productService) GetProductDetailByID(id int64) (*response.ProductDetailResponse, error) {
 	p.logger.Info("Get product with ID: ", id)
 
+	// Check cache first with timeout
+	//ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	//defer cancel()
+
+	cachedProductDetail, err := p.redis.Get(context.Background(), fmt.Sprintf(constants.KeyProductDetail, id)).Result()
+	if errors.Is(err, redis.Nil) {
+		p.logger.Info("Cache miss for product detail, ID: ", id)
+	} else if err != nil {
+		// Log Redis error but don't fail the request - continue with database
+		p.logger.Warn("Redis error (continuing with DB): ID: %d, Error: %v", id, err)
+	} else {
+		p.logger.Info("Cache hit for product detail, ID: ", id)
+		// Unmarshal cached data
+		var productDetailResponse response.ProductDetailResponse
+		if err := json.Unmarshal([]byte(cachedProductDetail), &productDetailResponse); err != nil {
+			p.logger.Error("Error unmarshalling cached product detail, ID: ", id, ", Error: ", err)
+			// Continue to database instead of failing
+		} else {
+			return &productDetailResponse, nil
+		}
+	}
+
+	// Get from database
 	productEntity, err := p.productRepository.FindProductByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	p.logger.Info("Product retrieved successfully, ID: ", productEntity.ID)
-	return p.createProductDetailResponse(productEntity), nil
+	p.logger.Info("Product retrieved successfully from DB, ID: ", productEntity.ID)
+	productDetailResponse := p.createProductDetailResponse(productEntity)
+
+	// Try to cache the result (fire and forget)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		cacheData, err := json.Marshal(productDetailResponse)
+		if err != nil {
+			p.logger.Error("Error marshalling product detail to cache, ID: ", id, ", Error: ", err)
+			return
+		}
+
+		if err := p.redis.Set(ctx, fmt.Sprintf(constants.KeyProductDetail, id), cacheData, constants.TTLProductDetail).Err(); err != nil {
+			p.logger.Error("Error setting product detail to cache, ID: ", id, ", Error: ", err)
+		} else {
+			p.logger.Info("Successfully cached product detail, ID: ", id)
+		}
+	}()
+
+	return productDetailResponse, nil
 }
 
 func (p *productService) GetProductSKUByID(skuID int64) (*response.ProductSKUDetailResponse, error) {
