@@ -36,7 +36,7 @@ func main() {
 		Password: cfg.GetRedisPassword(), // no password set
 		DB:       0,                      // use default DB
 		//PoolSize:     cfg.Redis.PoolSize,
-		//MinIdleConns: cfg.Redis.MinIdleConns,
+		MinIdleConns: cfg.Redis.MinIdleConns,
 		DialTimeout:  time.Duration(cfg.Redis.DialTimeout) * time.Second,
 		ReadTimeout:  time.Duration(cfg.Redis.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(cfg.Redis.WriteTimeout) * time.Second,
